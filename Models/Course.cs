@@ -6,13 +6,19 @@ namespace ContosoUniversity.Models;
 public class Course
 {
     [DatabaseGenerated(DatabaseGeneratedOption.None)]
+    [Display(Name = "Number")]
     public int Id { get; set; }
 
-    [Required(ErrorMessage = "Title is required.")]
-    [StringLength(50, ErrorMessage = "Title must not exceed 50 characters.")]
+    [StringLength(50, MinimumLength = 3)]
     public string Title { get; set; } = string.Empty;
 
+    [Range(0, 5)]
     public int Credits { get; set; }
 
+    public int DepartmentId { get; set; }
+
+    public Department Department { get; set; } = null!;
     public ICollection<Enrollment> Enrollments { get; set; } = [];
+    // connects the course to all instructors that teaches it
+    public ICollection<CourseAssignment> CourseAssignments { get; set; } = [];
 }
