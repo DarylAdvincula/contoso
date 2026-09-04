@@ -1,21 +1,46 @@
 using System.Diagnostics;
+using ContosoUniversity.Data;
 using ContosoUniversity.Models;
+using ContosoUniversity.Models.SchoolViewModels;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace ContosoUniversity.Controllers
 {
     public class HomeController : Controller
     {
+        private readonly SchoolContext _context;
         private readonly ILogger<HomeController> _logger;
 
-        public HomeController(ILogger<HomeController> logger)
+        public HomeController(
+            SchoolContext context,
+            ILogger<HomeController> logger
+        )
         {
+            _context = context;
             _logger = logger;
         }
 
+        [HttpGet]
         public IActionResult Index()
         {
             return View();
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> About()
+        {
+            var students = await _context.Students
+                .GroupBy(s => s.EnrollmentDate)
+                .Select(dateGroup => new EnrollmentDateGroup()
+                {
+                    EnrollmentDate = dateGroup.Key,
+                    StudentCount = dateGroup.Count()
+                })
+                .AsNoTracking()
+                .ToListAsync();
+
+            return View(students);
         }
 
         public IActionResult Privacy()
