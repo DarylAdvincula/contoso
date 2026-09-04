@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ContosoUniversity.Models;
 using ContosoUniversity.Data;
+using ContosoUniversity;
 
 public class StudentsController : Controller
 {
@@ -14,12 +15,90 @@ public class StudentsController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index(
+        string? sortOrder,
+        string? searchString,
+        int? page
+    )
     {
+        List<string> sortOrders = new List<string> {
+            "last_asc",
+            "last_desc",
+            "first_asc",
+            "first_desc",
+            "date_latest",
+            "date_oldest",
+        };
+
+        // if not provided, default to ascending name order
+        sortOrder = sortOrder ?? "last_asc";
+
+        // if provided but unrecognized, default to ascending name order
+        // otherwise, set the provided sort order as the sort order to follow
+        sortOrder = sortOrders.Contains(sortOrder.ToLower())
+            ? sortOrder.ToLower()
+            : "last_asc";
+
+        ViewData["LastSortOrder"] = sortOrder.StartsWith("last")
+            ? sortOrder
+            : ViewData["LastSortOrder"];
+
+        ViewData["FirstSortOrder"] = sortOrder.StartsWith("first")
+            ? sortOrder
+            : ViewData["FirstSortOrder"];
+
+        ViewData["DateSortOrder"] = sortOrder.StartsWith("date")
+            ? sortOrder
+            : ViewData["DateSortOrder"];
+
+        // store the final sort order and search string
+        ViewData["SortOrder"] = sortOrder;
+        ViewData["SearchString"] = searchString ?? "";
+
+        // build the initial query
+        IQueryable<Student> students = _context.Students;
+
+        if (!String.IsNullOrEmpty(searchString))
+        {
+            students = students.Where(s => 
+                s.LastName.Contains(searchString) ||
+                s.FirstMidName.Contains(searchString)
+            );
+        }
+
+        switch (sortOrder)
+        {
+            case "date_oldest":
+                students = students.OrderByDescending(s => s.EnrollmentDate);
+                break;
+
+            case "date_latest":
+                students = students.OrderBy(s => s.EnrollmentDate);
+                break;
+
+            case "first_desc":
+                students = students.OrderByDescending(s => s.FirstMidName);
+                break;
+
+            case "first_asc":
+                students = students.OrderBy(s => s.FirstMidName);
+                break;
+
+            case "last_desc":
+                students = students.OrderByDescending(s => s.LastName);
+                break;
+
+            default: // ascending name
+                students = students.OrderBy(s => s.LastName);
+                break;
+        }
+
         return View(
-            await _context.Students
-                .AsNoTracking()
-                .ToListAsync()
+            await Page<Student>.CreateAsync(
+                query: students,
+                pageNumber: page ?? 1,
+                pageSize: 5
+            )
         );
     }
 
