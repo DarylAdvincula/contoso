@@ -4,11 +4,9 @@
     ViewData["Title"] = "Details";
 }
 
-<h1>Details</h1>
-
+<h4>Student Details</h4>
+<hr />
 <div>
-    <h4>Student</h4>
-    <hr />
     <dl class="row">
         <dt class = "col-sm-2">
             @Html.DisplayNameFor(model => model.LastName)
@@ -17,6 +15,7 @@
             @Html.DisplayFor(model => model.LastName)
         </dd>
     </dl>
+    <dl class="row">
         <dt class = "col-sm-2">
             @Html.DisplayNameFor(model => model.FirstMidName)
         </dt>
@@ -24,6 +23,7 @@
             @Html.DisplayFor(model => model.FirstMidName)
         </dd>
     </dl>
+    <dl class="row">
         <dt class = "col-sm-2">
             @Html.DisplayNameFor(model => model.EnrollmentDate)
         </dt>
@@ -31,11 +31,28 @@
             @Html.DisplayFor(model => model.EnrollmentDate)
         </dd>
     </dl>
-        <dt class = "col-sm-2">
+    <dl class="row">
+        <dt class="col-sm-2">
             @Html.DisplayNameFor(model => model.Enrollments)
         </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Enrollments)
+        <dd class="col-sm-10">
+            <table class="table">
+                <tr>
+                    <th>Course Title</th>
+                    <th>Grade</th>
+                </tr>
+                @foreach (var item in Model.Enrollments)
+                {
+                    <tr>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.Course.Title)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.Grade)
+                        </td>
+                    </tr>
+                }
+            </table>
         </dd>
     </dl>
 </div>
