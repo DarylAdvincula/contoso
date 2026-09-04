@@ -71,6 +71,7 @@
                             asp-controller="Students" 
                             asp-action="Index"
                             asp-route-page="@Model.PageNumber"
+                           asp-route-searchString="@ViewData["SearchString"]"
                             asp-route-sortOrder="@(lastSort == "last_asc" ? "last_desc" : "last_asc")"
                            class="text-decoration-none btn btn-primary py-0 px-1">
                             @if (lastSort == "last_asc")
@@ -90,6 +91,7 @@
                         <a asp-controller="Students"
                            asp-action="Index"
                            asp-route-page="@Model.PageNumber"
+                           asp-route-searchString="@ViewData["SearchString"]"
                            asp-route-sortOrder="@(firstSort == "first_asc" ? "first_desc" : "first_asc")"
                            class="text-decoration-none btn btn-primary py-0 px-1">
                            @if(firstSort == "first_asc")
@@ -110,6 +112,7 @@
                             asp-controller="Students" 
                             asp-action="Index"
                             asp-route-page="@Model.PageNumber"
+                           asp-route-searchString="@ViewData["SearchString"]"
                             asp-route-sortOrder="@(dateSort == "date_latest" ? "date_oldest" : "date_latest")"
                            class="text-decoration-none btn btn-primary py-0 px-1">
                             @if (dateSort == "date_latest")
