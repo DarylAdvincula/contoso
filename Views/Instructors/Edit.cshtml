@@ -11,7 +11,7 @@
 <div class="row">
     <div class="col-md-4">
         <form asp-action="Edit">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div asp-validation-summary="All" class="text-danger"></div>
             <input type="hidden" asp-for="Id" />
             <div class="form-group">
                 <label asp-for="LastName" class="control-label"></label>
@@ -29,19 +29,46 @@
                 <span asp-validation-for="HireDate" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="FullName" class="control-label"></label>
-                <input asp-for="FullName" class="form-control" />
-                <span asp-validation-for="FullName" class="text-danger"></span>
+                <label asp-for="OfficeAssignment.Location" class="control-label"></label>
+                <input asp-for="OfficeAssignment.Location" class="form-control" />
+                <span asp-validation-for="OfficeAssignment.Location" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="CourseAssignments" class="control-label"></label>
-                <input asp-for="CourseAssignments" class="form-control" />
-                <span asp-validation-for="CourseAssignments" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="OfficeAssignment" class="control-label"></label>
-                <input asp-for="OfficeAssignment" class="form-control" />
-                <span asp-validation-for="OfficeAssignment" class="text-danger"></span>
+                <div class="col-md-offset-2 col-md-10">
+                    <table>
+                        <tr>
+                            @{
+                                int count = 0;
+
+                                List<ContosoUniversity.Models.SchoolViewModels.AssignedCourseData> courses = ViewBag.Courses;
+
+                                foreach (var course in courses)
+                                {
+                                    if (count++ % 3 == 0)
+                                    {
+                                        @:</tr><tr>
+                                    }
+
+                                    @:<td class="text-nowrap">
+                                        <input
+                                            id="@course.Id"
+                                            type="checkbox"
+                                            name="selectedCourses"
+                                            value="@course.Id"
+                                            @(course.Assigned ? "checked" : "")
+                                        />
+                                        <label 
+                                            for="@course.Id" 
+                                            class="user-select-none"
+                                        >
+                                            @course.Id @course.Title
+                                        </label>
+                                    @:</td>
+                                }
+                                @:</tr>
+                            }
+                    </table>
+                </div>
             </div>
             <div class="form-group">
                 <input type="submit" value="Save" class="btn btn-primary" />
