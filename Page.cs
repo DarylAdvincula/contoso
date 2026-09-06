@@ -2,6 +2,12 @@
 
 namespace ContosoUniversity;
 
+public static class PageOptions
+{
+    public static readonly int pageSizeMin = 5;
+    public static readonly int pageSizeMax = 100;
+}
+
 public class Page<T>
 {
     public int PageNumber { get; init; }
@@ -20,8 +26,14 @@ public class Page<T>
         int pageSize = 4
     )
     {
-        pageNumber = pageNumber < 1 ? 1 : pageNumber;
-        pageSize = pageSize < 1 ? 4 : pageSize;
+        // prevent negative page number values
+        pageNumber = pageNumber < 1 
+            ? 1 
+            : pageNumber;
+
+        // prevent compute heavy maximum retrivals
+        // as well as negative page size values
+        pageSize = Math.Min(Math.Max(pageSize, PageOptions.pageSizeMin), PageOptions.pageSizeMax);
 
         int total = await query.CountAsync();
 
@@ -36,7 +48,7 @@ public class Page<T>
             PageSize = pageSize,
             Total = total,
             TotalItems = items.Count,
-            TotalPages = (int)Math.Ceiling(total / (double)pageSize),
+            TotalPages = (int) Math.Ceiling(total / (double)pageSize),
             Items = items
         };
     }

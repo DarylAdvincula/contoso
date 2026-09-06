@@ -72,48 +72,320 @@ public class InstructorsController : Controller
 
     public async Task<IActionResult> Details(int? id)
     {
+        if (id == null)
+            return NotFound();
 
-        return View();
+        var instructor = await _context.Instructors
+            .Include(i => i.CourseAssignments)
+                .ThenInclude(ca => ca.Course)
+            .Include(i => i.OfficeAssignment)
+            .Include(i => i.DepartmentsWhereAdmin)
+            .AsNoTracking()
+            .FirstOrDefaultAsync(i => i.Id == id);
+
+        if (instructor == null)
+            return NotFound();
+
+        return View(instructor);
     }
 
     public IActionResult Create()
     {
+        var instructor = new Instructor();
+
+        PopulateAssignedCourseData(instructor);
         return View();
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create([Bind("Id,LastName,FirstMidName,HireDate,FullName,CourseAssignments,OfficeAssignment")] Instructor instructor)
+    public async Task<IActionResult> Create(
+        [Bind("FirstMidName,LastName,HireDate,OfficeAssignment")]
+        Instructor instructor,
+        
+        string[] selectedCourses
+    )
     {
+        if (!ModelState.IsValid)
+        {
+            PopulateAssignedCourseData(instructor);
+            return View(instructor);
+        }
 
+        if (selectedCourses != null)
+        {
+            instructor.CourseAssignments = new List<CourseAssignment>();
+
+            foreach (var course in selectedCourses)
+            {
+                var courseToAdd = new CourseAssignment 
+                { 
+                    InstructorId = instructor.Id, 
+                    CourseId = int.Parse(course) 
+                };
+
+                instructor.CourseAssignments.Add(courseToAdd);
+            }
+        }
+
+        string errorMessage = string.Empty;
+
+        try
+        {
+            _context.Add(instructor);
+            await _context.SaveChangesAsync();
+            return RedirectToAction(nameof(Index));
+        }
+        catch (DbUpdateException)
+        {
+            errorMessage = "Unable to save changes. " +
+                "Try again, and if the problem persists, " +
+                "see your system administrator.";
+        }
+        catch (Exception)
+        {
+            errorMessage = "An unkown error occurred. " +
+                "Try again, and if the problem persists, " +
+                "see your system administrator.";
+        }
+
+        ModelState.AddModelError("", errorMessage);
+        PopulateAssignedCourseData(instructor);
         return View(instructor);
     }
 
     public async Task<IActionResult> Edit(int? id)
     {
+        if (id == null)
+            return NotFound();
 
-        return View();
+        var instructor = await _context.Instructors
+            .Include(i => i.OfficeAssignment)
+            .Include(i => i.CourseAssignments)
+                .ThenInclude(ca => ca.Course)
+            .AsNoTracking()
+            .FirstOrDefaultAsync(i => i.Id == id);
+
+        if (instructor == null)
+            return NotFound();
+
+        PopulateAssignedCourseData(instructor);
+        return View(instructor);
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int? id, [Bind("Id,LastName,FirstMidName,HireDate,FullName,CourseAssignments,OfficeAssignment")] Instructor instructor)
+    public async Task<IActionResult> Edit(
+        int? id,
+
+        [Bind("FirstMidName,LastName,HireDate,OfficeAssignment")]
+        Instructor instructor,
+
+        string[] selectedCourses
+    )
     {
+        if (id == null)
+            return NotFound();
+
+        if (!ModelState.IsValid)
+        {
+            PopulateAssignedCourseData(instructor);
+            return View(instructor);
+        }
+
+        var instructorToUpdate = await _context.Instructors
+            .Include(i => i.OfficeAssignment)
+            .Include(i => i.CourseAssignments)
+                .ThenInclude(i => i.Course)
+            .FirstOrDefaultAsync(m => m.Id == id);
+
+        if (instructorToUpdate == null)
+            return NotFound();
+
+        string errorMessage = string.Empty;
+
+        UpdateInstructorCourses(selectedCourses, instructorToUpdate);
+
+        try
+        {
+            instructorToUpdate.FirstMidName = instructor.FirstMidName;
+            instructorToUpdate.LastName = instructor.LastName;
+            instructorToUpdate.HireDate = instructor.HireDate;
+            instructorToUpdate.OfficeAssignment = instructor.OfficeAssignment;
+
+            if (String.IsNullOrWhiteSpace(instructorToUpdate.OfficeAssignment?.Location))
+                instructorToUpdate.OfficeAssignment = null;
+
+            await _context.SaveChangesAsync();
+            return RedirectToAction(nameof(Index));
+        }
+        catch (DbUpdateException)
+        {
+            errorMessage = "Unable to save changes. " +
+                "Try again, and if the problem persists, " +
+                "see your system administrator.";
+        }
+        catch (Exception)
+        {
+            errorMessage = "An unkown error occurred. " +
+                "Try again, and if the problem persists, " +
+                "see your system administrator.";
+        }
+
+        ModelState.AddModelError("", errorMessage);
+        PopulateAssignedCourseData(instructorToUpdate);
+        return View(instructorToUpdate);
+    }
+
+    private void PopulateAssignedCourseData(Instructor instructor)
+    {
+        var allCourses = _context.Courses;
+
+        // get all assigned course ids
+        var instructorCourses = new HashSet<int>(
+            instructor.CourseAssignments
+                .Select(c => c.CourseId)
+        );
+
+        var viewModel = new List<AssignedCourseData>();
+
+        foreach (var course in allCourses)
+        {
+            viewModel.Add(new AssignedCourseData
+            {
+                Id = course.Id,
+                Title = course.Title,
+                Assigned = instructorCourses.Contains(course.Id) // determine if course is assigned
+            });
+        }
+
+        // store in view data
+        ViewData["Courses"] = viewModel;
+    }
+
+    private void UpdateInstructorCourses(
+        string[] selectedCourses, 
+        Instructor instructorToUpdate
+    )
+    {
+        if (selectedCourses == null)
+        {
+            // make the instructor's course assignments empty if no courses were selected
+            instructorToUpdate.CourseAssignments = new List<CourseAssignment>();
+            return;
+        }
+
+        // convert selected courses into hash set (prevents duplicate selections)
+        var selectedCoursesHS = new HashSet<string>(selectedCourses);
+
+        // get currently assigned course ids
+        var instructorCourses = new HashSet<int>(
+            instructorToUpdate
+                .CourseAssignments.Select(c => c.Course.Id)
+        );
+
+        foreach (var course in _context.Courses)
+        {
+            // determine if the current course's id is in the selected courses ids
+            if (selectedCoursesHS.Contains(course.Id.ToString()))
+            {
+                // make a new course asssignment for every newly selected ids
+                if (!instructorCourses.Contains(course.Id))
+                {
+                    instructorToUpdate.CourseAssignments.Add(new CourseAssignment 
+                    { 
+                        InstructorId = instructorToUpdate.Id, 
+                        CourseId = course.Id 
+                    });
+                }
+            }
+            else
+            {
+                // remove instructor courses that have been unselected
+                if (instructorCourses.Contains(course.Id))
+                {
+                    CourseAssignment courseToRemove = instructorToUpdate.CourseAssignments
+                        .First(i => i.CourseId == course.Id);
+
+                    _context.Remove(courseToRemove);
+                }
+            }
+        }
+    }
+
+    public async Task<IActionResult> Delete(
+        int? id, 
+        string? errorMessage
+    )
+    {
+        if (id == null)
+            return NotFound();
+
+        var instructor = await _context.Instructors
+            .Include(i => i.CourseAssignments)
+                .ThenInclude(ca => ca.Course)
+            .Include(i => i.OfficeAssignment)
+            .Include(i => i.DepartmentsWhereAdmin)
+            .AsNoTracking()
+            .FirstOrDefaultAsync(i => i.Id == id);
+
+        if (instructor == null)
+            return NotFound();
+
+        if (!String.IsNullOrEmpty(errorMessage))
+            ViewData["ErrorMessage"] = errorMessage;
 
         return View(instructor);
     }
 
-    public async Task<IActionResult> Delete(int? id)
-    {
-
-        return View();
-    }
-
-    [HttpPost, ActionName("Delete")]
+    [HttpPost]
+    [ActionName("Delete")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(int? id)
     {
+        if (id == null)
+            return NotFound();
 
-        return RedirectToAction(nameof(Index));
+        var instructor = await _context.Instructors
+            .Include(i => i.CourseAssignments)
+            .FirstOrDefaultAsync(i => i.Id == id);
+
+        if (instructor == null)
+            return NotFound();
+
+        // get all the departments where the instructor was assigned as an administrator
+        var departmentsWhereAdmin = await _context.Departments
+            .Where(d => d.InstructorId == id)
+            .ToListAsync();
+
+        // set the instructor id to null before removing the instructor
+        departmentsWhereAdmin.ForEach(d => d.InstructorId = null);
+
+        _context.Instructors.Remove(instructor);
+
+        string errorMessage = string.Empty;
+
+        try
+        {
+            await _context.SaveChangesAsync();
+            return RedirectToAction(nameof(Index));
+        }
+        catch (DbUpdateException)
+        {
+            errorMessage = "Delete failed. Try again, " +
+                "and if the problem persists, " +
+                "see your system administrator.";
+        }
+        catch (Exception)
+        {
+            errorMessage = "An unknown error occurred. Try again, " +
+                "and if the problem persists, " +
+                "see your system administrator.";
+        }
+
+        return RedirectToAction(
+            nameof(Delete),
+            new { id, errorMessage }
+        );
     }
 }

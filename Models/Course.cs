@@ -17,7 +17,7 @@ public class Course
 
     public int DepartmentId { get; set; }
 
-    public Department Department { get; set; } = null!;
+    public Department? Department { get; set; }
     public ICollection<Enrollment> Enrollments { get; set; } = [];
     // connects the course to all instructors that teaches it
     public ICollection<CourseAssignment> CourseAssignments { get; set; } = [];

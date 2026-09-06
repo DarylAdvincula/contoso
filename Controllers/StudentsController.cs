@@ -21,6 +21,7 @@ public class StudentsController : Controller
         int? page
     )
     {
+        // supported sort values
         List<string> sortOrders = new List<string> {
             "last_asc",
             "last_desc",
@@ -96,8 +97,7 @@ public class StudentsController : Controller
         return View(
             await Page<Student>.CreateAsync(
                 query: students,
-                pageNumber: page ?? 1,
-                pageSize: 5
+                pageNumber: page ?? 1
             )
         );
     }
@@ -131,24 +131,31 @@ public class StudentsController : Controller
         Student student
     )
     {
+        if (!ModelState.IsValid)
+            return View(student);
+
+        string errorMessage = string.Empty;
+
         try
         {
-            if (ModelState.IsValid)
-            {
-                _context.Students.Add(student);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
-            }
+            _context.Students.Add(student);
+            await _context.SaveChangesAsync();
+            return RedirectToAction(nameof(Index));
         }
         catch (DbUpdateException)
         {
-            ModelState.AddModelError("",
-                "Unable to save changes. " +
+            errorMessage = "Unable to save changes. " +
                 "Try again, and if the problem persists, " +
-                "see your system administrator."
-            );
+                "see your system administrator.";
+        }
+        catch (Exception)
+        {
+            errorMessage = "An unknown error occurred. " +
+                "Try again, and if the problem persists, " +
+                "see your system administrator.";
         }
 
+        ModelState.AddModelError("", errorMessage);
         return View(student);
     }
 
@@ -176,11 +183,16 @@ public class StudentsController : Controller
         if (id == null)
             return NotFound();
 
+        if (!ModelState.IsValid)
+            return View(student);
+
         var studentToUpdate = await _context.Students
             .FirstOrDefaultAsync(s => s.Id == id);
 
         if (studentToUpdate == null)
             return NotFound();
+
+        string errorMessage = string.Empty;
 
         try
         {
@@ -193,24 +205,22 @@ public class StudentsController : Controller
         }
         catch (DbUpdateException)
         {
-            ModelState.AddModelError("",
-                "Unable to save changes. " +
+            errorMessage = "Unable to save changes. " +
                 "Try again, and if the problem persists, " +
-                "see your system administrator."
-            );
+                "see your system administrator.";
         }
         catch (Exception)
         {
-            ModelState.AddModelError("",
-                "An unknown error occurred. " +
+            errorMessage = "An unknown error occurred. " +
                 "Try again, and if the problem persists, " +
-                "see your system administrator."
-            );
+                "see your system administrator.";
         }
 
+        ModelState.AddModelError("", errorMessage);
         return View(student);
     }
 
+    [HttpGet]
     public async Task<IActionResult> Delete(
         int? id,
         string? errorMessage
@@ -234,7 +244,8 @@ public class StudentsController : Controller
         return View(student);
     }
 
-    [HttpPost, ActionName("Delete")]
+    [HttpPost]
+    [ActionName("Delete")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(int? id)
     {
@@ -245,6 +256,8 @@ public class StudentsController : Controller
         if (student == null)
             return RedirectToAction(nameof(Index));
 
+        string errorMessage = string.Empty;
+
         try
         {
             _context.Students.Remove(student);
@@ -253,21 +266,20 @@ public class StudentsController : Controller
         }
         catch (DbUpdateException)
         {
-            return RedirectToAction(nameof(Delete), new {
-                id = id,
-                errorMessage = "Delete failed. Try again, " + 
-                    "and if the problem persists, " +
-                    "see your system administrator."
-            });
+            errorMessage = "Delete failed. Try again, " +
+                "and if the problem persists, " +
+                "see your system administrator.";
         }
         catch (Exception)
         {
-            return RedirectToAction(nameof(Delete), new {
-                id = id,
-                errorMessage = "An unknown error occurred. Try again, " +
-                    "and if the problem persists, " +
-                    "see your system administrator."
-            });
+            errorMessage = "An unknown error occurred. Try again, " +
+                "and if the problem persists, " +
+                "see your system administrator.";
         }
+
+        return RedirectToAction(
+            nameof(Delete), 
+            new { id, errorMessage }
+        );
     }
 }

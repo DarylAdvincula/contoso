@@ -1,3 +1,4 @@
+using ContosoUniversity.Configs;
 using ContosoUniversity.Data;
 using Microsoft.EntityFrameworkCore;
 

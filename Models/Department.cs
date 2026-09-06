@@ -22,7 +22,7 @@ public class Department
     public DateTime StartDate { get; set; }
 
     // null while no administrator instructor was assigned
-    public int? InstructorID { get; set; }
+    public int? InstructorId { get; set; }
 
     public Instructor Administrator { get; set; } = null!;
 

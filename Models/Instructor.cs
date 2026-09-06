@@ -33,5 +33,6 @@ public class Instructor
     }
 
     public ICollection<CourseAssignment> CourseAssignments { get; set; } = [];
-    public OfficeAssignment OfficeAssignment { get; set; }
+    public ICollection<Department> DepartmentsWhereAdmin { get; set; } = [];
+    public OfficeAssignment? OfficeAssignment { get; set; }
 }

@@ -32,5 +32,10 @@ public class SchoolContext : DbContext
 
         modelBuilder.Entity<CourseAssignment>()
             .HasKey(ca => new { ca.CourseId, ca.InstructorId });
+
+        modelBuilder.Entity<Department>()
+            .HasOne(d => d.Administrator)
+            .WithMany(i => i.DepartmentsWhereAdmin)
+            .HasForeignKey(d => d.InstructorId);
     }
 }
