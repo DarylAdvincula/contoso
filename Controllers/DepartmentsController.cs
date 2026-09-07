@@ -31,10 +31,17 @@ public class DepartmentsController : Controller
         if (id == null)
             return BadRequest();
 
+        //var department = await _context.Departments
+        //    .Include(d => d.Administrator)
+        //    .AsNoTracking()
+        //    .FirstOrDefaultAsync(m => m.Id == id);
+
+        string query = "SELECT * FROM Department WHERE Id = @p0";
         var department = await _context.Departments
+            .FromSqlRaw(query, id)
             .Include(d => d.Administrator)
             .AsNoTracking()
-            .FirstOrDefaultAsync(m => m.Id == id);
+            .SingleOrDefaultAsync();
 
         if (department == null)
             return NotFound();
