@@ -105,7 +105,7 @@ public class StudentsController : Controller
     public async Task<IActionResult> Details(int? id)
     {
         if (id == null)
-            return NotFound();
+            return BadRequest();
 
         var student = await _context.Students
             .Include(s => s.Enrollments)
@@ -162,7 +162,7 @@ public class StudentsController : Controller
     public async Task<IActionResult> Edit(int? id)
     {
         if (id == null)
-            return NotFound();
+            return BadRequest();
 
         var student = await _context.Students.FindAsync(id);
 
@@ -181,7 +181,7 @@ public class StudentsController : Controller
     )
     {
         if (id == null)
-            return NotFound();
+            return BadRequest();
 
         if (!ModelState.IsValid)
             return View(student);
@@ -227,7 +227,7 @@ public class StudentsController : Controller
     )
     {
         if (id == null)
-            return NotFound();
+            return BadRequest();
 
         var student = await _context.Students
             .AsNoTracking()
@@ -249,6 +249,9 @@ public class StudentsController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(int? id)
     {
+        if (id == null)
+            return BadRequest();
+
         // no AsNoTracking and FirstOrDefaultAsync chain
         // because the target student's model should be tracked
         var student = await _context.Students.FindAsync(id);

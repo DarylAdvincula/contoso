@@ -23,8 +23,12 @@ public class Department
 
     public int? InstructorId { get; set; }
 
+    [Timestamp]
+    public byte[]? RowVersion { get; set; }
+
     public Instructor? Administrator { get; set; }
 
     // courses that are being handled by the department
     public ICollection<Course> Courses { get; set; } = [];
 }
+
