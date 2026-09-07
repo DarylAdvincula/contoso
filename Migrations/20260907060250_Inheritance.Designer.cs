@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ContosoUniversity.Migrations
 {
     [DbContext(typeof(SchoolContext))]
-    [Migration("20260907052309_UpdatesFromDepartmentImplementation")]
-    partial class UpdatesFromDepartmentImplementation
+    [Migration("20260907060250_Inheritance")]
+    partial class Inheritance
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -224,7 +224,7 @@ namespace ContosoUniversity.Migrations
             modelBuilder.Entity("ContosoUniversity.Models.Department", b =>
                 {
                     b.HasOne("ContosoUniversity.Models.Instructor", "Administrator")
-                        .WithMany("DepartmentsWhereAdmin")
+                        .WithMany()
                         .HasForeignKey("InstructorId");
 
                     b.Navigation("Administrator");
@@ -275,8 +275,6 @@ namespace ContosoUniversity.Migrations
             modelBuilder.Entity("ContosoUniversity.Models.Instructor", b =>
                 {
                     b.Navigation("CourseAssignments");
-
-                    b.Navigation("DepartmentsWhereAdmin");
 
                     b.Navigation("OfficeAssignment");
                 });

@@ -79,7 +79,6 @@ public class InstructorsController : Controller
             .Include(i => i.CourseAssignments)
                 .ThenInclude(ca => ca.Course)
             .Include(i => i.OfficeAssignment)
-            .Include(i => i.DepartmentsWhereAdmin)
             .AsNoTracking()
             .FirstOrDefaultAsync(i => i.Id == id);
 
@@ -328,7 +327,6 @@ public class InstructorsController : Controller
             .Include(i => i.CourseAssignments)
                 .ThenInclude(ca => ca.Course)
             .Include(i => i.OfficeAssignment)
-            .Include(i => i.DepartmentsWhereAdmin)
             .AsNoTracking()
             .FirstOrDefaultAsync(i => i.Id == id);
 
@@ -356,13 +354,11 @@ public class InstructorsController : Controller
         if (instructor == null)
             return NotFound();
 
-        // get all the departments where the instructor was assigned as an administrator
-        var departmentsWhereAdmin = await _context.Departments
-            .Where(d => d.InstructorId == id)
-            .ToListAsync();
+        var departmentWhereAdmin = await _context.Departments
+            .FirstOrDefaultAsync(d => d.InstructorId == id);
 
-        // set the instructor id to null before removing the instructor
-        departmentsWhereAdmin.ForEach(d => d.InstructorId = null);
+        if (departmentWhereAdmin != null)
+            departmentWhereAdmin.InstructorId = null;
 
         _context.Instructors.Remove(instructor);
 
