@@ -24,18 +24,22 @@ public class SchoolContext : DbContext
         // instruct ef core to name each entity table as specified
         modelBuilder.Entity<Course>().ToTable("Course");
         modelBuilder.Entity<Enrollment>().ToTable("Enrollment");
-        modelBuilder.Entity<Student>().ToTable("Student");
         modelBuilder.Entity<Department>().ToTable("Department");
-        modelBuilder.Entity<Instructor>().ToTable("Instructor");
         modelBuilder.Entity<OfficeAssignment>().ToTable("OfficeAssignment");
         modelBuilder.Entity<CourseAssignment>().ToTable("CourseAssignment");
+
+        modelBuilder.Entity<Person>()
+            .ToTable("Person")
+            .HasDiscriminator<string>("Discriminator")
+            .HasValue<Instructor>("Instructor")
+            .HasValue<Student>("Student");
 
         modelBuilder.Entity<CourseAssignment>()
             .HasKey(ca => new { ca.CourseId, ca.InstructorId });
 
         modelBuilder.Entity<Department>()
             .HasOne(d => d.Administrator)
-            .WithMany(i => i.DepartmentsWhereAdmin)
+            .WithMany()
             .HasForeignKey(d => d.InstructorId);
 
         modelBuilder.Entity<Department>()

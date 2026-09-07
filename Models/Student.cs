@@ -4,34 +4,12 @@ using System.Drawing;
 
 namespace ContosoUniversity.Models;
 
-public class Student
+public class Student : Person
 {
-    public int Id { get; set; }
-
-    [Required]
-    [StringLength(50)]
-    [Display(Name = "Last Name")]
-    public string LastName { get; set; } = string.Empty;
-
-    [Required]
-    [StringLength(50)]
-    [Column("FirstName")] // name FirstMidName property as FirstName column in the database
-    [Display(Name = "First Name")]
-    public string FirstMidName { get; set; } = string.Empty;
-
     [DataType(DataType.Date)]
     [DisplayFormat(DataFormatString = "{0:yyyy-MM-dd}", ApplyFormatInEditMode = true)]
     [Display(Name = "Enrollment Date")]
     public DateTime EnrollmentDate { get; set; }
-
-    [Display(Name = "Full Name")]
-    public string FullName
-    {
-        get
-        {
-            return LastName + ", " + FirstMidName;
-        }
-    }
 
     public ICollection<Enrollment> Enrollments { get; set; } = [];
 }
