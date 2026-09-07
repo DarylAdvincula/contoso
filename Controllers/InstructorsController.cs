@@ -132,6 +132,9 @@ public class InstructorsController : Controller
 
         try
         {
+            if (String.IsNullOrWhiteSpace(instructor.OfficeAssignment?.Location))
+                instructor.OfficeAssignment = null;
+
             _context.Add(instructor);
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));

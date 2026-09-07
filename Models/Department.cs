@@ -21,10 +21,9 @@ public class Department
     [Display(Name = "Start Date")]
     public DateTime StartDate { get; set; }
 
-    // null while no administrator instructor was assigned
     public int? InstructorId { get; set; }
 
-    public Instructor Administrator { get; set; } = null!;
+    public Instructor? Administrator { get; set; }
 
     // courses that are being handled by the department
     public ICollection<Course> Courses { get; set; } = [];

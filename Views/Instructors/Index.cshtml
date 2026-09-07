@@ -17,7 +17,7 @@
             <th>Hire Date</th>
             <th>Office</th>
             <th>Courses</th>
-            <th></th>
+            <th>Actions</th>
         </tr>
     </thead>
     <tbody>
@@ -39,14 +39,7 @@
                     @Html.DisplayFor(modelItem => item.HireDate)
                 </td>
                 <td>
-                    @if (item.OfficeAssignment != null)
-                    {
-                        @item.OfficeAssignment.Location
-                    }
-                    else
-                    {
-                        <span>No office</span>
-                    }
+                    @Html.DisplayFor(modelItem => item.OfficeAssignment!.Location)
                 </td>
                 <td>
                     @foreach (var course in item.CourseAssignments)
