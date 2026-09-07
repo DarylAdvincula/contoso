@@ -37,5 +37,9 @@ public class SchoolContext : DbContext
             .HasOne(d => d.Administrator)
             .WithMany(i => i.DepartmentsWhereAdmin)
             .HasForeignKey(d => d.InstructorId);
+
+        modelBuilder.Entity<Department>()
+            .Property(p => p.RowVersion)
+            .IsConcurrencyToken();
     }
 }

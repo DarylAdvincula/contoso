@@ -73,7 +73,7 @@ public class InstructorsController : Controller
     public async Task<IActionResult> Details(int? id)
     {
         if (id == null)
-            return NotFound();
+            return BadRequest();
 
         var instructor = await _context.Instructors
             .Include(i => i.CourseAssignments)
@@ -160,7 +160,7 @@ public class InstructorsController : Controller
     public async Task<IActionResult> Edit(int? id)
     {
         if (id == null)
-            return NotFound();
+            return BadRequest();
 
         var instructor = await _context.Instructors
             .Include(i => i.OfficeAssignment)
@@ -188,7 +188,7 @@ public class InstructorsController : Controller
     )
     {
         if (id == null)
-            return NotFound();
+            return BadRequest();
 
         if (!ModelState.IsValid)
         {

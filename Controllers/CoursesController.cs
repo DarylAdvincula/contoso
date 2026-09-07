@@ -27,7 +27,7 @@ public class CoursesController : Controller
     public async Task<IActionResult> Details(int? id)
     {
         if (id == null)
-            return NotFound();
+            return BadRequest();
 
         var course = await _context.Courses
             .Include(c => c.Department)
@@ -90,7 +90,7 @@ public class CoursesController : Controller
     public async Task<IActionResult> Edit(int? id)
     {
         if (id == null)
-            return NotFound();
+            return BadRequest();
 
         var course = await _context.Courses
             .AsNoTracking()
@@ -113,7 +113,7 @@ public class CoursesController : Controller
     )
     {
         if (id == null)
-            return NotFound();
+            return BadRequest();
 
         var courseToUpdate = await _context.Courses
             .FindAsync(id);
@@ -157,10 +157,13 @@ public class CoursesController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> Delete(int? id, string? errorMessage)
+    public async Task<IActionResult> Delete(
+        int? id, 
+        string? errorMessage
+    )
     {
         if (id == null)
-            return NotFound();
+            return BadRequest();
 
         var course = await _context.Courses
             .Include(c => c.Department)
@@ -181,6 +184,9 @@ public class CoursesController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(int? id)
     {
+        if (id == null)
+            return BadRequest();
+
         var course = await _context.Courses
             .FindAsync(id);
 

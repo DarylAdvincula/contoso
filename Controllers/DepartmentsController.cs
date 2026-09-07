@@ -1,9 +1,11 @@
 
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using ContosoUniversity.Models;
 using ContosoUniversity.Data;
+using ContosoUniversity.Models;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.Blazor;
+using Newtonsoft.Json.Converters;
 
 public class DepartmentsController : Controller
 {
@@ -27,7 +29,7 @@ public class DepartmentsController : Controller
     public async Task<IActionResult> Details(int? id)
     {
         if (id == null)
-            return NotFound();
+            return BadRequest();
 
         var department = await _context.Departments
             .Include(d => d.Administrator)
@@ -53,7 +55,7 @@ public class DepartmentsController : Controller
         Department department
     )
     {
-        if (ModelState.IsValid)
+        if (!ModelState.IsValid)
         {
             PopulateAdministratorsDropDownList(department.InstructorId);
             return View(department);
@@ -85,10 +87,11 @@ public class DepartmentsController : Controller
         return View(department);
     }
 
+    [HttpGet]
     public async Task<IActionResult> Edit(int? id)
     {
         if (id == null)
-            return NotFound();
+            return BadRequest();
 
         var department = await _context.Departments
             .FindAsync(id);
@@ -105,12 +108,12 @@ public class DepartmentsController : Controller
     public async Task<IActionResult> Edit(
         int? id, 
 
-        [Bind("Name,Budget,StartDate,InstructorId")] 
+        [Bind("Name,Budget,StartDate,InstructorId,RowVersion")] 
         Department department
     )
     {
         if (id == null)
-            return NotFound();
+            return BadRequest();
 
         if (!ModelState.IsValid)
         {
@@ -122,20 +125,101 @@ public class DepartmentsController : Controller
             .FindAsync (id);
 
         if (departmentToUpdate == null)
-            return NotFound();
+        {
+            var deletedDepartment = new Department();
+
+            ModelState.AddModelError("",
+                "Unable to save changes. " +
+                "The department was deleted by another user."
+            );
+            PopulateAdministratorsDropDownList(department.InstructorId);
+            return View(deletedDepartment);
+        }
 
         string errorMessage = string.Empty;
 
         try
         {
+            _context
+                .Entry(departmentToUpdate)
+                .Property("RowVersion")
+                .OriginalValue = department.RowVersion;
+
             departmentToUpdate.Name = department.Name;
             departmentToUpdate.Budget = department.Budget;
             departmentToUpdate.StartDate = department.StartDate;
             departmentToUpdate.InstructorId = department.InstructorId;
 
-            _context.Update(department);
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
+        }
+        catch (DbUpdateConcurrencyException ex)
+        {
+            var entry = ex.Entries.Single();
+            var clientValues = (Department) entry.Entity;
+            var databaseEntry = entry.GetDatabaseValues();
+
+            if (databaseEntry == null)
+            {
+                errorMessage = "Unable to save changes. " +
+                    "The department was deleted by another user.";
+            }
+            else
+            {
+                var databaseValues = (Department) databaseEntry.ToObject();
+
+                if (databaseValues.Name != clientValues.Name)
+                {
+                    ModelState.AddModelError(
+                        "Name", 
+                        "Current value: " + databaseValues.Name
+                    );
+                }
+                if (databaseValues.Budget != clientValues.Budget)
+                {
+                    ModelState.AddModelError(
+                        "Budget", 
+                        "Current value: " + String.Format("{0:c}", databaseValues.Budget)
+                    );
+                }
+                if (databaseValues.StartDate != clientValues.StartDate)
+                {
+                    ModelState.AddModelError(
+                        "StartDate", 
+                        "Current value: " + String.Format("{0:d}", databaseValues.StartDate)
+                    );
+                }
+                if (databaseValues.InstructorId != clientValues.InstructorId)
+                {
+                    ModelState.AddModelError(
+                        "InstructorId",
+                        "Current value: " + _context.Instructors.Find(databaseValues.InstructorId)?.FullName
+                    );
+                }
+                if (databaseValues.StartDate != clientValues.StartDate)
+                {
+                    ModelState.AddModelError(
+                        "StartDate",
+                        "Current value: " + String.Format("{0:d}", databaseValues.StartDate)
+                    );
+                }
+
+                ModelState.AddModelError("",
+                    "The record you attempted to edit " +
+                    "was modified by another user after you got the original value. The " +
+                    "edit operation was canceled and the current values in the database " +
+                    "have been displayed. If you still want to edit this record, click " +
+                    "the Save button again. Otherwise click the Back to List hyperlink."
+                );
+
+                // apply the current RowVersion
+                department.RowVersion = databaseValues.RowVersion;
+
+                // remove the previous RowVersion validation status 
+                // prevents having the same model state error and lets
+                // the user to save their changes
+                ModelState.Remove(nameof(Department.RowVersion));
+            }
         }
         catch (DbUpdateException)
         {
@@ -155,33 +239,79 @@ public class DepartmentsController : Controller
         return View(department);
     }
 
-    public async Task<IActionResult> Delete(int? id)
+    [HttpGet]
+    public async Task<IActionResult> Delete(
+        int? id,
+        string? errorMessage
+    )
     {
         if (id == null)
-            return NotFound();
+            return BadRequest();
 
         var department = await _context.Departments
             .Include(d => d.Administrator)
             .FirstOrDefaultAsync(m => m.Id == id);
 
+        bool hasError = !String.IsNullOrEmpty(errorMessage);
+
+        if (hasError)
+            ViewData["ErrorMessage"] = errorMessage;
+
         if (department == null)
+        {
+            if (hasError)
+                return RedirectToAction(nameof(Index));
+
             return NotFound();
+        }
 
         return View(department);
     }
 
     [HttpPost]
-    [ActionName("Delete")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeleteConfirmed(int? id)
+    public async Task<IActionResult> Delete(Department department)
     {
-        var department = await _context.Departments.FindAsync(id);
+        var departmentToDelete = await _context.Departments
+            .FindAsync(department.Id);
 
-        if (department != null)
-            _context.Departments.Remove(department);
+        if (departmentToDelete == null)
+        {
+            ViewBag.DeletedAlready = true;
+            ViewData["ErrorMessage"] = "Unable to delete. " +
+                "The department was already deleted by another user.";
 
-        await _context.SaveChangesAsync();
-        return RedirectToAction(nameof(Index));
+            return View(department);
+        }
+
+        try
+        {
+            _context.Entry(departmentToDelete).State = EntityState.Deleted;
+
+            await _context.SaveChangesAsync();
+            return RedirectToAction(nameof(Index));
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return RedirectToAction(nameof(Delete), new {
+                id = department.Id,
+                errorMessage = "The record you attempted to delete " +
+                    "was modified by another user after you got the original values. " +
+                    "The delete operation was canceled and the current values in the " +
+                    "database have been displayed. If you still want to delete this " +
+                    "record, click the Delete button again. Otherwise " +
+                    "click the Back to List hyperlink."
+            });
+        }
+        catch (Exception)
+        {
+            ModelState.AddModelError("", 
+                "Unable to delete. Try again, " + 
+                "and if the problem persists, " + 
+                "contact your system administrator."
+            );
+            return View(department);
+        }
     }
 
     private void PopulateAdministratorsDropDownList(object? selectedAdministrator = null)
