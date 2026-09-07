@@ -30,17 +30,27 @@ namespace ContosoUniversity.Controllers
         [HttpGet]
         public async Task<IActionResult> About()
         {
-            var students = await _context.Students
-                .GroupBy(s => s.EnrollmentDate)
-                .Select(dateGroup => new EnrollmentDateGroup()
-                {
-                    EnrollmentDate = dateGroup.Key,
-                    StudentCount = dateGroup.Count()
-                })
+            //var students = await _context.Students
+            //    .GroupBy(s => s.EnrollmentDate)
+            //    .Select(dateGroup => new EnrollmentDateGroup()
+            //    {
+            //        EnrollmentDate = dateGroup.Key,
+            //        StudentCount = dateGroup.Count()
+            //    })
+            //    .AsNoTracking()
+            //    .ToListAsync();
+
+            string query = "SELECT EnrollmentDate, COUNT(*) AS StudentCount " +
+                "FROM Person " +
+                "WHERE Discriminator = 'Student' " +
+                "GROUP BY EnrollmentDate";
+
+            IEnumerable<EnrollmentDateGroup> data = await _context.Database
+                .SqlQueryRaw<EnrollmentDateGroup>(query)
                 .AsNoTracking()
                 .ToListAsync();
 
-            return View(students);
+            return View(data);
         }
 
         public IActionResult Privacy()

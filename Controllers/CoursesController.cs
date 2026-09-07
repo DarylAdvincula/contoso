@@ -14,16 +14,31 @@ public class CoursesController : Controller
         _context = context;
     }
 
-    public async Task<IActionResult> Index()    
+    [HttpGet]
+    public async Task<ActionResult> Index(int? SelectedDepartment)
     {
-        var courses = await _context.Courses
-            .Include(c => c.Department)
-            .AsNoTracking()
+        var departments = await _context.Departments
+            .OrderBy(q => q.Name)
             .ToListAsync();
 
-        return View(courses);
+        ViewBag.SelectedDepartment = new SelectList(
+            departments, 
+            "Id", 
+            "Name", 
+            SelectedDepartment
+        );
+
+        int departmentID = SelectedDepartment.GetValueOrDefault();
+
+        IQueryable<Course> courses = _context.Courses
+            .Where(c => !SelectedDepartment.HasValue || c.DepartmentId == departmentID)
+            .OrderBy(c => c.Id)
+            .Include(d => d.Department);
+
+        return View(courses.ToList());
     }
 
+    [HttpGet]
     public async Task<IActionResult> Details(int? id)
     {
         if (id == null)
@@ -155,6 +170,26 @@ public class CoursesController : Controller
         PopulateDepartmentsDropDownList(courseToUpdate.DepartmentId);
         return View(courseToUpdate);
     }
+
+    public ActionResult UpdateCourseCredits()
+    {
+        return View();
+    }
+
+    [HttpPost]
+    public ActionResult UpdateCourseCredits(int? multiplier)
+    {
+        if (multiplier != null)
+        {
+            FormattableString query = $"UPDATE Course SET Credits = Credits * {multiplier}";
+
+            ViewBag.RowsAffected = _context.Database
+                .ExecuteSql(query);
+        }
+
+        return View();
+    }
+
 
     [HttpGet]
     public async Task<IActionResult> Delete(
