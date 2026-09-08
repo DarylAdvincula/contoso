@@ -42,10 +42,17 @@
                     @Html.DisplayFor(modelItem => item.OfficeAssignment!.Location)
                 </td>
                 <td>
-                    @foreach (var course in item.CourseAssignments)
+                    @if (item.CourseAssignments.Count() > 0)
                     {
-                        <span>@course.CourseId @course.Course.Title</span> 
-                        <br />
+                        @foreach (var course in item.CourseAssignments)
+                        {
+                            <span>@course.CourseId @course.Course.Title</span> 
+                            <br />
+                        }
+                    }
+                    else
+                    {
+                        <p>No course/s assigned</p>
                     }
                 </td>
                 <td>

@@ -174,6 +174,8 @@
     </table>
 </div>
 
+<p>Page @(Model.PageNumber > 0 ? Model.PageNumber : 0) of @Model.TotalPages</p>
+
 <div class="d-flex gap-2">
     <a 
         asp-controller="Students" 
