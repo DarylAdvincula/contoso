@@ -7,9 +7,27 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
-builder.Services.AddDbContext<SchoolContext>(options =>
+builder.Services.AddSingleton<SchoolInterceptorLogging>();
+builder.Services.AddSingleton<SchoolInterceptorTransientErrors>();
+
+// mute framework's logs to show the custom logger's outputs
+//builder.Logging.AddFilter("Microsoft.EntityFrameworkCore", LogLevel.None);
+
+builder.Services.AddDbContext<SchoolContext>((serviceProvider, options) =>
 {
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
+    var transientErrorInterceptor = serviceProvider.GetRequiredService<SchoolInterceptorTransientErrors>();
+    var loggingInterceptor = serviceProvider.GetRequiredService<SchoolInterceptorLogging>();
+
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("DefaultConnection"),
+        // Connection resiliency
+        // maximum of 6 retries
+        options => options.EnableRetryOnFailure()
+    )
+        .AddInterceptors(
+            transientErrorInterceptor,
+            loggingInterceptor
+        );
 });
 
 var app = builder.Build();
