@@ -7,14 +7,13 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
+// Add interceptors as services
 builder.Services.AddSingleton<SchoolInterceptorLogging>();
 builder.Services.AddSingleton<SchoolInterceptorTransientErrors>();
 
-// mute framework's logs to show the custom logger's outputs
-//builder.Logging.AddFilter("Microsoft.EntityFrameworkCore", LogLevel.None);
-
 builder.Services.AddDbContext<SchoolContext>((serviceProvider, options) =>
 {
+    // create interceptor services
     var transientErrorInterceptor = serviceProvider.GetRequiredService<SchoolInterceptorTransientErrors>();
     var loggingInterceptor = serviceProvider.GetRequiredService<SchoolInterceptorLogging>();
 

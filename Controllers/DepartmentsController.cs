@@ -4,8 +4,6 @@ using ContosoUniversity.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.Blazor;
-using Newtonsoft.Json.Converters;
 
 public class DepartmentsController : Controller
 {
@@ -280,35 +278,52 @@ public class DepartmentsController : Controller
     public async Task<IActionResult> Delete(Department department)
     {
         var departmentToDelete = await _context.Departments
-            .FindAsync(department.Id);
+        .FindAsync(department.Id);
 
+        // department deltails was already loaded at the delete ui but was deleted
+        // first by another user
         if (departmentToDelete == null)
         {
             ViewBag.DeletedAlready = true;
-            ViewData["ErrorMessage"] = "Unable to delete. " +
-                "The department was already deleted by another user.";
-
+            ViewData["ErrorMessage"] = "This department has already been deleted by another user.";
             return View(department);
         }
 
         try
         {
-            _context.Entry(departmentToDelete).State = EntityState.Deleted;
+            _context.Entry(departmentToDelete).Property("RowVersion").OriginalValue = department.RowVersion;
+            _context.Entry(department).State = EntityState.Deleted;
 
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
+
         catch (DbUpdateConcurrencyException)
         {
-            return RedirectToAction(nameof(Delete), new {
-                id = department.Id,
-                errorMessage = "The record you attempted to delete " +
-                    "was modified by another user after you got the original values. " +
-                    "The delete operation was canceled and the current values in the " +
-                    "database have been displayed. If you still want to delete this " +
-                    "record, click the Delete button again. Otherwise " +
-                    "click the Back to List hyperlink."
-            });
+            var databaseValues = await _context.Departments.AsNoTracking()
+            .FirstOrDefaultAsync(d => d.Id == department.Id);
+
+            if (databaseValues == null)
+            {
+                // the department still exist during the execution of this method on every user that attempts
+                // to delete it but others might have deleted it splitsecond earlier
+                ViewBag.DeletedAlready = true;
+                ViewData["ErrorMessage"] = "This department was just deleted by another user in another session.";
+                return View(department);
+            }
+            else
+            {
+                // someone modified it before the current user deletes it causing the row version to change
+                // and cancel the current user's delete operation
+                return RedirectToAction(nameof(Delete), new
+                {
+                    id = department.Id,
+                    errorMessage = "The record you are trying to delete was modified by another user " +
+                        "after you loaded the page. The delete operation was canceled so you " +
+                        "can review the current database values displayed below. If you still " +
+                        "want to delete this department, click Delete again."
+                });
+            }
         }
         catch (Exception)
         {
