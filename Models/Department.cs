@@ -10,7 +10,7 @@ public class Department
     [StringLength(50, MinimumLength = 3)]
     public string Name { get; set; } = string.Empty;
 
-    // sets the column's database to money, it is
+    // sets the column's database type to money, it is
     // more appropriate since the column will hold currency amount
     [DataType(DataType.Currency)]
     [Column(TypeName = "money")]
