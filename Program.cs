@@ -10,9 +10,6 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddSingleton<SchoolInterceptorLogging>();
 builder.Services.AddSingleton<SchoolInterceptorTransientErrors>();
 
-// mute framework's logs to show the custom logger's outputs
-//builder.Logging.AddFilter("Microsoft.EntityFrameworkCore", LogLevel.None);
-
 builder.Services.AddDbContext<SchoolContext>((serviceProvider, options) =>
 {
     var transientErrorInterceptor = serviceProvider.GetRequiredService<SchoolInterceptorTransientErrors>();
