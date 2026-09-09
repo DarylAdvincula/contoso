@@ -1,4 +1,5 @@
 
+using ContosoUniversity;
 using ContosoUniversity.Data;
 using ContosoUniversity.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -15,7 +16,7 @@ public class CoursesController : Controller
     }
 
     [HttpGet]
-    public async Task<ActionResult> Index(int? SelectedDepartment)
+    public async Task<ActionResult> Index(int? SelectedDepartment, int? page)
     {
         var departments = await _context.Departments
             .OrderBy(q => q.Name)
@@ -35,7 +36,12 @@ public class CoursesController : Controller
             .OrderBy(c => c.Id)
             .Include(d => d.Department);
 
-        return View(courses.ToList());
+        return View(
+            await Page<Course>.CreateAsync(
+                query: courses, 
+                pageNumber: page ?? 1
+            )
+        );
     }
 
     [HttpGet]

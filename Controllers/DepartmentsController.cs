@@ -1,4 +1,5 @@
 
+using ContosoUniversity;
 using ContosoUniversity.Data;
 using ContosoUniversity.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -14,14 +15,18 @@ public class DepartmentsController : Controller
         _context = context;
     }
 
-    public async Task<IActionResult> Index()    
+    public async Task<IActionResult> Index(int? page)
     {
-        var departments = await _context.Departments
+        var departments = _context.Departments
             .Include(d => d.Administrator)
-            .AsNoTracking()
-            .ToListAsync();
+            .AsNoTracking();
 
-        return View(departments);
+        return View(
+            await Page<Department>.CreateAsync(
+                query: departments,
+                pageNumber: page ?? 1
+            )
+        );
     }
 
     public async Task<IActionResult> Details(int? id)
@@ -29,14 +34,10 @@ public class DepartmentsController : Controller
         if (id == null)
             return BadRequest();
 
-        //var department = await _context.Departments
-        //    .Include(d => d.Administrator)
-        //    .AsNoTracking()
-        //    .FirstOrDefaultAsync(m => m.Id == id);
-
         string query = "SELECT * FROM Department WHERE Id = @p0";
         var department = await _context.Departments
             .FromSqlRaw(query, id)
+            .Include(d => d.Courses)
             .Include(d => d.Administrator)
             .AsNoTracking()
             .SingleOrDefaultAsync();

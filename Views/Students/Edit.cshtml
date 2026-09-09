@@ -27,44 +27,6 @@
                 <span asp-validation-for="EnrollmentDate" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="Enrollments" class="control-label"></label>
-                <div class="col-md-offset-2 col-md-10">
-                    <table>
-                        <tr>
-                            @{
-                                int count = 0;
-
-                                List<ContosoUniversity.Models.SchoolViewModels.EnrolledCourseData> courses = ViewBag.Courses;
-
-                                foreach (var course in courses)
-                                {
-                                    if (count++ % 3 == 0)
-                                    {
-                                        @:</tr><tr>
-                                    }
-
-                                    @:<td class="text-nowrap">
-                                        <input
-                                            id="@course.Id"
-                                            type="checkbox"
-                                            name="selectedCourses"
-                                            value="@course.Id"
-                                            @(course.Enrolled ? "checked" : "")
-                                        />
-                                        <label 
-                                            for="@course.Id" 
-                                            class="user-select-none"
-                                        >
-                                            @course.Id @course.Title
-                                        </label>
-                                    @:</td>
-                                }
-                                @:</tr>
-                            }
-                    </table>
-                </div>
-            </div>
-            <div class="form-group">
                 <input type="submit" value="Save" class="btn btn-primary" />
             </div>
         </form>

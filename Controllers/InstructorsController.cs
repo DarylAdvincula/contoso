@@ -14,8 +14,21 @@ public class InstructorsController : Controller
         _context = context;
     }
 
-    public async Task<IActionResult> Index(int? id, int? courseId)    
+    public async Task<IActionResult> Index(int? id, int? courseId, int? page)    
     {
+        const int pageSize = 5;
+        var pageNumber = page ?? 1;
+        pageNumber = page < 1 ? 1 : pageNumber;
+        int totalItems = await _context.Instructors.CountAsync();
+        int totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
+
+        ViewBag.Id = id;
+        ViewBag.CourseId = courseId;
+        ViewBag.PageNumber = pageNumber;
+        ViewBag.TotalPages = totalPages;
+        ViewBag.HasPreviousPage = pageNumber > 1;
+        ViewBag.HasNextPage = pageNumber < totalPages;
+
         var viewModel = new InstructorIndexData();
 
         // store the instructors first
@@ -25,7 +38,15 @@ public class InstructorsController : Controller
                 .ThenInclude(ca => ca.Course)
                     .ThenInclude(c => c.Department)
             .OrderBy(i => i.LastName)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
             .ToListAsync();
+
+        if (
+            id != null &&
+            !viewModel.Instructors.Any(i => i.Id == id)
+        )
+            return NotFound();
 
         // requires a selected instuctor
         if (id != null)

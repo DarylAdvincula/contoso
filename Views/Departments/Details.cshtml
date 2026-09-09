@@ -41,6 +41,26 @@
             @Html.DisplayFor(model => model.Administrator!.FullName)
         </dd>
     </dl>
+    <dl class="row">
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Courses)
+        </dt>
+        <dd class="col-sm-10">
+            <table class="table">
+                <tr>
+                    <th>Course Title</th>
+                </tr>
+                @foreach (var item in Model.Courses)
+                {
+                    <tr>
+                        <td>
+                            @item.Id @item.Title
+                        </td>
+                    </tr>
+                }
+            </table>
+        </dd>
+    </dl>
 </div>
 <div>
     <a asp-action="Edit" asp-route-id="@Model?.Id">Edit</a> |
