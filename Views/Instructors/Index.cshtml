@@ -95,7 +95,7 @@
                     @item.Title
                 </td>
                 <td>
-                    @item.Department.Name
+                    @item.Department!.Name
                 </td>
             </tr>
         }
@@ -116,7 +116,7 @@
         {
             <tr>
                 <td>
-                    @item.Student.FullName
+                    @item.Student!.FullName
                 </td>
                 <td>
                     @Html.DisplayFor(modelItem => item.Grade)

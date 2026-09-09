@@ -1,13 +1,13 @@
-@model ContosoUniversity.Page<Department>
+@model ContosoUniversity.Page<Enrollment>
 
 @{
-    ViewData["Title"] = "Departments";
+    ViewData["Title"] = "Enrollments";
 
     var prevDisabled = !Model.HasPreviousPage;
     var nextDisabled = !Model.HasNextPage;
 }
 
-<h1>Departments</h1>
+<h1>Enrollments</h1>
 
 <p>
     <a asp-action="Create">Create New</a>
@@ -15,20 +15,18 @@
 <table class="table">
     <thead>
         <tr>
-            <th>Name</th>
-            <th>Budget</th>
-            <th>StartDate</th>
-            <th>Administrator</th>
+            <th>Enrollee</th>
+            <th>Course</th>
+            <th>Grade</th>
             <th>Actions</th>
         </tr>
     </thead>
     <tbody>
 @foreach (var item in Model.Items) {
         <tr>
-            <td>@Html.DisplayFor(model => item.Name)</td>
-            <td>@Html.DisplayFor(model => item.Budget)</td>
-            <td>@Html.DisplayFor(model => item.StartDate)</td>
-            <td>@Html.DisplayFor(model => item.Administrator!.FullName)</td>
+            <td>@Html.DisplayFor(model => item.Student!.FullName)</td>
+            <td>@item.Course!.Id @item.Course.Title</td>
+            <td>@Html.DisplayFor(model => item.Grade)</td>
             <td>
                 <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
                 <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
@@ -42,14 +40,14 @@
 <p>Page @(Model.PageNumber > 0 ? Model.PageNumber : 0) of @Model.TotalPages</p>
 
 <div class="d-flex gap-2">
-    <a asp-controller="Departments"
+    <a asp-controller="Enrollments"
        asp-action="Index"
        asp-route-page="@(Model.PageNumber - 1)"
        class="btn btn-default d-flex gap-2 align-items-center py-1 pe-3 ps-2 @(prevDisabled ? "disabled" : "")">
         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-left-icon lucide-chevron-left"><path d="m15 18-6-6 6-6" /></svg>
         Prev
     </a>
-    <a asp-controller="Departments"
+    <a asp-controller="Enrollments"
        asp-action="Index"
        asp-route-page="@(Model.PageNumber + 1)"
        class="btn btn-default d-flex gap-2 align-items-center py-1 ps-3 pe-2 @(nextDisabled ? "disabled" : "")">

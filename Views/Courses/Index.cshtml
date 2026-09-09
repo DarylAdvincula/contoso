@@ -1,7 +1,10 @@
-@model IEnumerable<ContosoUniversity.Models.Course>
+@model ContosoUniversity.Page<Course>
 
 @{
     ViewData["Title"] = "Courses";
+
+    var prevDisabled = !Model.HasPreviousPage;
+    var nextDisabled = !Model.HasNextPage;
 }
 
 <h1>Courses</h1>
@@ -28,38 +31,21 @@
 <table class="table">
     <thead>
         <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.Id)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Title)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Credits)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Department)
-            </th>
-            <th></th>
+            <th>Number</th>
+            <th>Title</th>
+            <th>Credits</th>
+            <th>Department</th>
+            <th>Actions</th>
         </tr>
     </thead>
     <tbody>
-        @foreach (var item in Model)
+        @foreach (var item in Model.Items)
         {
             <tr>
-                <td>
-                    @Html.DisplayFor(modelItem => item.Id)
-                </td>
-                <td>
-                    @Html.DisplayFor(modelItem => item.Title)
-                </td>
-                <td>
-                    @Html.DisplayFor(modelItem => item.Credits)
-                </td>
-                <td>
-
-                    @Html.DisplayFor(modelItem => item.Department!.Name)
-                </td>
+                <td>@Html.DisplayFor(modelItem => item.Id)</td>
+                <td>@Html.DisplayFor(modelItem => item.Title)</td>
+                <td>@Html.DisplayFor(modelItem => item.Credits)</td>
+                <td>@Html.DisplayFor(modelItem => item.Department!.Name)</td>
                 <td>
                     <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
                     <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
@@ -69,3 +55,22 @@
         }
     </tbody>
 </table>
+
+<p>Page @(Model.PageNumber > 0 ? Model.PageNumber : 0) of @Model.TotalPages</p>
+
+<div class="d-flex gap-2">
+    <a asp-controller="Courses"
+       asp-action="Index"
+       asp-route-page="@(Model.PageNumber - 1)"
+       class="btn btn-default d-flex gap-2 align-items-center py-1 pe-3 ps-2 @(prevDisabled ? "disabled" : "")">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-left-icon lucide-chevron-left"><path d="m15 18-6-6 6-6" /></svg>
+        Prev
+    </a>
+    <a asp-controller="Courses"
+       asp-action="Index"
+       asp-route-page="@(Model.PageNumber + 1)"
+       class="btn btn-default d-flex gap-2 align-items-center py-1 ps-3 pe-2 @(nextDisabled ? "disabled" : "")">
+        Next
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-right-icon lucide-chevron-right"><path d="m9 18 6-6-6-6" /></svg>
+    </a>
+</div>
