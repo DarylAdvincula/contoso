@@ -1,9 +1,10 @@
 
+using ContosoUniversity;
+using ContosoUniversity.Data;
+using ContosoUniversity.Models;
+using ContosoUniversity.Models.SchoolViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using ContosoUniversity.Models;
-using ContosoUniversity.Data;
-using ContosoUniversity;
 
 public class StudentsController : Controller
 {
@@ -40,28 +41,25 @@ public class StudentsController : Controller
             ? sortOrder.ToLower()
             : "last_asc";
 
-        ViewData["LastSortOrder"] = sortOrder.StartsWith("last")
-            ? sortOrder
-            : ViewData["LastSortOrder"];
+        if (sortOrder.StartsWith("last"))
+            ViewData["LastSortOrder"] = sortOrder;
 
-        ViewData["FirstSortOrder"] = sortOrder.StartsWith("first")
-            ? sortOrder
-            : ViewData["FirstSortOrder"];
+        if (sortOrder.StartsWith("first"))
+            ViewData["FirstSortOrder"] = sortOrder;
 
-        ViewData["DateSortOrder"] = sortOrder.StartsWith("date")
-            ? sortOrder
-            : ViewData["DateSortOrder"];
+        if (sortOrder.StartsWith("date"))
+            ViewData["DateSortOrder"] = sortOrder;
 
         // store the final sort order and search string
         ViewData["SortOrder"] = sortOrder;
-        ViewData["SearchString"] = searchString ?? "";
+        ViewData["SearchString"] = searchString;
 
         // build the initial query
-        IQueryable<Student> students = _context.Students;
+        IQueryable<Student> studentsQuery = _context.Students;
 
         if (!String.IsNullOrEmpty(searchString))
         {
-            students = students.Where(s => 
+            studentsQuery = studentsQuery.Where(s => 
                 s.LastName.Contains(searchString) ||
                 s.FirstMidName.Contains(searchString)
             );
@@ -70,33 +68,33 @@ public class StudentsController : Controller
         switch (sortOrder)
         {
             case "date_oldest":
-                students = students.OrderByDescending(s => s.EnrollmentDate);
+                studentsQuery = studentsQuery.OrderByDescending(s => s.EnrollmentDate);
                 break;
 
             case "date_latest":
-                students = students.OrderBy(s => s.EnrollmentDate);
+                studentsQuery = studentsQuery.OrderBy(s => s.EnrollmentDate);
                 break;
 
             case "first_desc":
-                students = students.OrderByDescending(s => s.FirstMidName);
+                studentsQuery = studentsQuery.OrderByDescending(s => s.FirstMidName);
                 break;
 
             case "first_asc":
-                students = students.OrderBy(s => s.FirstMidName);
+                studentsQuery = studentsQuery.OrderBy(s => s.FirstMidName);
                 break;
 
             case "last_desc":
-                students = students.OrderByDescending(s => s.LastName);
+                studentsQuery = studentsQuery.OrderByDescending(s => s.LastName);
                 break;
 
-            default: // ascending name
-                students = students.OrderBy(s => s.LastName);
+            default: // ascending last name
+                studentsQuery = studentsQuery.OrderBy(s => s.LastName);
                 break;
         }
 
         return View(
             await Page<Student>.CreateAsync(
-                query: students,
+                query: studentsQuery,
                 pageNumber: page ?? 1
             )
         );
@@ -119,16 +117,23 @@ public class StudentsController : Controller
         return View(student);
     }
 
+    [HttpGet]
     public IActionResult Create()
     {
-        return View();
+        var newStudent = new Student();
+        newStudent.EnrollmentDate = DateTime.Now;
+        
+        PopulateEnrolledCourseData(newStudent);
+        return View(newStudent);
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(
         [Bind("EnrollmentDate,FirstMidName,LastName")]
-        Student student
+        Student student,
+
+        string[] selectedCourses
     )
     {
         if (!ModelState.IsValid)
@@ -138,6 +143,7 @@ public class StudentsController : Controller
 
         try
         {
+            UpdateEnrolledCourses(selectedCourses, student);
             _context.Students.Add(student);
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
@@ -164,11 +170,15 @@ public class StudentsController : Controller
         if (id == null)
             return BadRequest();
 
-        var student = await _context.Students.FindAsync(id);
+        var student = await _context.Students
+            .Include(s => s.Enrollments)
+            .AsNoTracking()
+            .FirstOrDefaultAsync(s => s.Id == id);
 
         if (student == null)
             return NotFound();
 
+        PopulateEnrolledCourseData(student);
         return View(student);
     }
 
@@ -176,8 +186,11 @@ public class StudentsController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(
         int? id,
+
         [Bind("EnrollmentDate,LastName,FirstMidName")]
-        Student student
+        Student student,
+
+        string[] selectedCourses
     )
     {
         if (id == null)
@@ -187,6 +200,7 @@ public class StudentsController : Controller
             return View(student);
 
         var studentToUpdate = await _context.Students
+            .Include(s => s.Enrollments)
             .FirstOrDefaultAsync(s => s.Id == id);
 
         if (studentToUpdate == null)
@@ -200,6 +214,7 @@ public class StudentsController : Controller
             studentToUpdate.FirstMidName = student.FirstMidName;
             studentToUpdate.LastName = student.LastName;
 
+            UpdateEnrolledCourses(selectedCourses, studentToUpdate);
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
@@ -209,15 +224,91 @@ public class StudentsController : Controller
                 "Try again, and if the problem persists, " +
                 "see your system administrator.";
         }
-        catch (Exception)
+        catch (Exception ex)
         {
             errorMessage = "An unknown error occurred. " +
                 "Try again, and if the problem persists, " +
-                "see your system administrator.";
+                "see your system administrator. " + ex.Message;
         }
 
         ModelState.AddModelError("", errorMessage);
+        PopulateEnrolledCourseData(student);
         return View(student);
+    }
+
+    private void PopulateEnrolledCourseData(Student student)
+    {
+        var allCourses = _context.Courses;
+
+        // get all assigned course ids
+        var enrolledCourses = new HashSet<int>(
+            student.Enrollments
+                .Select(e => e.CourseId)
+        );
+
+        var viewModel = new List<EnrolledCourseData>();
+
+        foreach (var course in allCourses)
+        {
+            viewModel.Add(new EnrolledCourseData
+            {
+                Id = course.Id,
+                Title = course.Title,
+                Enrolled = enrolledCourses.Contains(course.Id) // determine if student is enrolled to the course
+            });
+        }
+
+        // store in view
+        ViewBag.Courses = viewModel;
+    }
+
+    private void UpdateEnrolledCourses(
+        string[] selectedCourses,
+        Student studentToUpdate
+    )
+    {
+        if (selectedCourses == null)
+        {
+            studentToUpdate.Enrollments = [];
+            return;
+        }
+
+        // convert selected courses into hash set (prevents duplicate selections)
+        var selectedCoursesHS = new HashSet<string>(selectedCourses);
+
+        // get currently enrolled course ids
+        var enrolledCourses = new HashSet<int>(
+            studentToUpdate
+                .Enrollments.Select(e => e.CourseId)
+        );
+
+        foreach (var course in _context.Courses)
+        {
+            // determine if the current course's id is in the selected courses ids
+            if (selectedCoursesHS.Contains(course.Id.ToString()))
+            {
+                // make a new enrollment for every newly selected ids
+                if (!enrolledCourses.Contains(course.Id))
+                {
+                    studentToUpdate.Enrollments.Add(new Enrollment
+                    {
+                        StudentId = studentToUpdate.Id,
+                        CourseId = course.Id
+                    });
+                }
+            }
+            else
+            {
+                // remove enrolled courses that have been unselected
+                if (enrolledCourses.Contains(course.Id))
+                {
+                    Enrollment enrollmentToRemove = studentToUpdate.Enrollments
+                        .First(i => i.CourseId == course.Id);
+
+                    _context.Remove(enrollmentToRemove);
+                }
+            }
+        }
     }
 
     [HttpGet]

@@ -31,7 +31,7 @@ public class Page<T>
             ? 1 
             : pageNumber;
 
-        // prevent compute heavy maximum retrivals
+        // clamp page size to prevent too many row retrievals
         // as well as negative page size values
         pageSize = Math.Min(Math.Max(pageSize, PageOptions.pageSizeMin), PageOptions.pageSizeMax);
 

@@ -90,9 +90,10 @@ public class InstructorsController : Controller
 
     public IActionResult Create()
     {
-        var instructor = new Instructor();
+        var newInstructor = new Instructor();
+        newInstructor.HireDate = DateTime.Now;
 
-        PopulateAssignedCourseData(instructor);
+        PopulateAssignedCourseData(newInstructor);
         return View();
     }
 
@@ -206,7 +207,6 @@ public class InstructorsController : Controller
 
         string errorMessage = string.Empty;
 
-        UpdateInstructorCourses(selectedCourses, instructorToUpdate);
 
         try
         {
@@ -218,6 +218,7 @@ public class InstructorsController : Controller
             if (String.IsNullOrWhiteSpace(instructorToUpdate.OfficeAssignment?.Location))
                 instructorToUpdate.OfficeAssignment = null;
 
+            UpdateInstructorCourses(selectedCourses, instructorToUpdate);
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
@@ -246,7 +247,7 @@ public class InstructorsController : Controller
         // get all assigned course ids
         var instructorCourses = new HashSet<int>(
             instructor.CourseAssignments
-                .Select(c => c.CourseId)
+                .Select(ca => ca.CourseId)
         );
 
         var viewModel = new List<AssignedCourseData>();
@@ -261,8 +262,8 @@ public class InstructorsController : Controller
             });
         }
 
-        // store in view data
-        ViewData["Courses"] = viewModel;
+        // store in view
+        ViewBag.Courses = viewModel;
     }
 
     private void UpdateInstructorCourses(
