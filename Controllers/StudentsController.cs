@@ -40,28 +40,25 @@ public class StudentsController : Controller
             ? sortOrder.ToLower()
             : "last_asc";
 
-        ViewData["LastSortOrder"] = sortOrder.StartsWith("last")
-            ? sortOrder
-            : ViewData["LastSortOrder"];
+        if (sortOrder.StartsWith("last"))
+            ViewData["LastSortOrder"] = sortOrder;
 
-        ViewData["FirstSortOrder"] = sortOrder.StartsWith("first")
-            ? sortOrder
-            : ViewData["FirstSortOrder"];
+        if (sortOrder.StartsWith("first"))
+            ViewData["FirstSortOrder"] = sortOrder;
 
-        ViewData["DateSortOrder"] = sortOrder.StartsWith("date")
-            ? sortOrder
-            : ViewData["DateSortOrder"];
+        if (sortOrder.StartsWith("date"))
+            ViewData["DateSortOrder"] = sortOrder;
 
         // store the final sort order and search string
         ViewData["SortOrder"] = sortOrder;
-        ViewData["SearchString"] = searchString ?? "";
+        ViewData["SearchString"] = searchString;
 
         // build the initial query
-        IQueryable<Student> students = _context.Students;
+        IQueryable<Student> studentsQuery = _context.Students;
 
         if (!String.IsNullOrEmpty(searchString))
         {
-            students = students.Where(s => 
+            studentsQuery = studentsQuery.Where(s => 
                 s.LastName.Contains(searchString) ||
                 s.FirstMidName.Contains(searchString)
             );
@@ -70,33 +67,33 @@ public class StudentsController : Controller
         switch (sortOrder)
         {
             case "date_oldest":
-                students = students.OrderByDescending(s => s.EnrollmentDate);
+                studentsQuery = studentsQuery.OrderByDescending(s => s.EnrollmentDate);
                 break;
 
             case "date_latest":
-                students = students.OrderBy(s => s.EnrollmentDate);
+                studentsQuery = studentsQuery.OrderBy(s => s.EnrollmentDate);
                 break;
 
             case "first_desc":
-                students = students.OrderByDescending(s => s.FirstMidName);
+                studentsQuery = studentsQuery.OrderByDescending(s => s.FirstMidName);
                 break;
 
             case "first_asc":
-                students = students.OrderBy(s => s.FirstMidName);
+                studentsQuery = studentsQuery.OrderBy(s => s.FirstMidName);
                 break;
 
             case "last_desc":
-                students = students.OrderByDescending(s => s.LastName);
+                studentsQuery = studentsQuery.OrderByDescending(s => s.LastName);
                 break;
 
-            default: // ascending name
-                students = students.OrderBy(s => s.LastName);
+            default: // ascending last name
+                studentsQuery = studentsQuery.OrderBy(s => s.LastName);
                 break;
         }
 
         return View(
             await Page<Student>.CreateAsync(
-                query: students,
+                query: studentsQuery,
                 pageNumber: page ?? 1
             )
         );

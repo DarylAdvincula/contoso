@@ -56,7 +56,7 @@ public class DepartmentsController : Controller
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(
-        [Bind("Name,Budget,StartDate,InstructorId")] 
+        [Bind("Name,Budget,StartDate,InstructorId")]
         Department department
     )
     {
@@ -145,10 +145,7 @@ public class DepartmentsController : Controller
 
         try
         {
-            _context
-                .Entry(departmentToUpdate)
-                .Property("RowVersion")
-                .OriginalValue = department.RowVersion;
+            _context.Entry(departmentToUpdate).Property("RowVersion").OriginalValue = department.RowVersion;
 
             departmentToUpdate.Name = department.Name;
             departmentToUpdate.Budget = department.Budget;
@@ -292,16 +289,15 @@ public class DepartmentsController : Controller
         try
         {
             _context.Entry(departmentToDelete).Property("RowVersion").OriginalValue = department.RowVersion;
-            _context.Entry(department).State = EntityState.Deleted;
+            _context.Entry(departmentToDelete).State = EntityState.Deleted;
 
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
-
         catch (DbUpdateConcurrencyException)
         {
             var databaseValues = await _context.Departments.AsNoTracking()
-            .FirstOrDefaultAsync(d => d.Id == department.Id);
+                .FirstOrDefaultAsync(d => d.Id == department.Id);
 
             if (databaseValues == null)
             {
