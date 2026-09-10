@@ -32,6 +32,7 @@ public class DepartmentsController : Controller
         }
 
         departmentsQuery = departmentsQuery
+            .OrderBy(d => d.Name)
             .AsNoTracking();
 
         return View(

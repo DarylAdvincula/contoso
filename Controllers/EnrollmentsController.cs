@@ -65,7 +65,6 @@ public class EnrollmentsController : Controller
         );
     }
 
-    // GET: ENROLLMENTS/Details/5
     public async Task<IActionResult> Details(int? id)
     {
         if (id == null)
@@ -92,14 +91,38 @@ public class EnrollmentsController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create([Bind("CourseId,StudentId,Grade")] Enrollment enrollment)
+    public async Task<IActionResult> Create(
+        [Bind("CourseId,StudentId,Grade")]
+        Enrollment enrollment
+    )
     {
-        if (ModelState.IsValid)
+        if (!ModelState.IsValid)
+            return View(enrollment);
+
+        string errorMessage = string.Empty;
+
+        try
         {
             _context.Add(enrollment);
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
+        catch (DbUpdateException)
+        {
+            errorMessage = "Unable to create. " +
+                "Try again, and if the problem persists, " +
+                "see your system administrator.";
+        }
+        catch (Exception)
+        {
+            errorMessage = "An unknown error occurred. " +
+                "Try again, and if the problem persists, " +
+                "see your system administrator.";
+        }
+
+        ModelState.AddModelError("", errorMessage);
+        PopulateCoursesDropDownList();
+        PopulateStudentDropDownList();
         return View(enrollment);
     }
 
