@@ -4,7 +4,7 @@ namespace ContosoUniversity;
 
 public static class PageOptions
 {
-    public static readonly int pageSizeMin = 5;
+    public static readonly int pageSizeMin = 3;
     public static readonly int pageSizeMax = 100;
 }
 
@@ -23,7 +23,7 @@ public class Page<T>
     public static async Task<Page<T>> CreateAsync(
         IQueryable<T> query,
         int pageNumber = 1,
-        int pageSize = 4
+        int? pageSize = null
     )
     {
         // prevent negative page number values
@@ -33,22 +33,32 @@ public class Page<T>
 
         // clamp page size to prevent too many row retrievals
         // as well as negative page size values
-        pageSize = Math.Min(Math.Max(pageSize, PageOptions.pageSizeMin), PageOptions.pageSizeMax);
+        var pageSizeFinal = Math.Min(
+            Math.Max(
+                pageSize ?? PageOptions.pageSizeMin, 
+                PageOptions.pageSizeMin
+            ), 
+            PageOptions.pageSizeMax
+        );
 
         int total = await query.CountAsync();
 
         var items = await query
-            .Skip((pageNumber - 1) * pageSize)
-            .Take(pageSize)
+            .Skip((pageNumber - 1) * pageSizeFinal)
+            .Take(pageSizeFinal)
             .ToListAsync();
+
+        var totalPages = (int)Math.Ceiling(total / (double)pageSizeFinal);
 
         return new Page<T>
         {
-            PageNumber = pageNumber,
-            PageSize = pageSize,
+            PageNumber = totalPages > 0 
+                ? pageNumber 
+                : 0,
+            PageSize = pageSizeFinal,
             Total = total,
             TotalItems = items.Count,
-            TotalPages = (int) Math.Ceiling(total / (double)pageSize),
+            TotalPages = totalPages,
             Items = items
         };
     }

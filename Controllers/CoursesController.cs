@@ -16,8 +16,14 @@ public class CoursesController : Controller
     }
 
     [HttpGet]
-    public async Task<ActionResult> Index(int? SelectedDepartment, int? page)
+    public async Task<ActionResult> Index(
+        int? page,
+        int? SelectedDepartment, 
+        string? SearchString
+    )
     {
+        ViewData["SearchString"] = SearchString;
+
         var departments = await _context.Departments
             .OrderBy(q => q.Name)
             .ToListAsync();
@@ -29,17 +35,27 @@ public class CoursesController : Controller
             SelectedDepartment
         );
 
-        int departmentID = SelectedDepartment.GetValueOrDefault();
+        int departmentId = SelectedDepartment.GetValueOrDefault();
 
-        IQueryable<Course> courses = _context.Courses
-            .Where(c => !SelectedDepartment.HasValue || c.DepartmentId == departmentID)
+        IQueryable<Course> coursesQuery = _context.Courses
+            .Where(c => 
+                !SelectedDepartment.HasValue || 
+                c.DepartmentId == departmentId
+            )
             .OrderBy(c => c.Id)
             .Include(d => d.Department);
 
+        if (!String.IsNullOrEmpty(SearchString))
+        {
+            coursesQuery = coursesQuery.
+                Where(c => c.Title.Contains(SearchString));
+        }
+
         return View(
             await Page<Course>.CreateAsync(
-                query: courses, 
-                pageNumber: page ?? 1
+                query: coursesQuery, 
+                pageNumber: page ?? 1,
+                pageSize: 3
             )
         );
     }

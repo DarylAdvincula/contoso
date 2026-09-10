@@ -11,7 +11,7 @@
     var firstSort = ViewData["FirstSortOrder"]?.ToString() ?? "first_asc";
     var dateSort = ViewData["DateSortOrder"]?.ToString() ?? "date_latest";
 
-    // determining disabled buttons based on total pages
+    // determining disabled buttons
     var prevDisabled = !Model.HasPreviousPage;
     var nextDisabled = !Model.HasNextPage;
 }
@@ -42,18 +42,10 @@
                             asp-controller="Students" 
                             asp-action="Index"
                             asp-route-page="@Model.PageNumber"
-                           asp-route-searchString="@ViewData["SearchString"]"
+                           asp-route-SearchString="@ViewData["SearchString"]"
                             asp-route-sortOrder="@(lastSort == "last_asc" ? "last_desc" : "last_asc")"
                            class="text-decoration-none d-flex align-items-center justify-content-between gap-2"
                         >
-                            @if (lastSort == "last_asc")
-                            {
-                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-up-icon lucide-chevron-up"><path d="m18 15-6-6-6 6" /></svg>
-                            }
-                            else
-                            {
-                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down-icon lucide-chevron-down"><path d="m6 9 6 6 6-6" /></svg>
-                            }
                             <span>Last Name</span>
                         </a>
                     </div>
@@ -63,17 +55,9 @@
                         <a asp-controller="Students"
                             asp-action="Index"
                             asp-route-page="@Model.PageNumber"
-                            asp-route-searchString="@ViewData["SearchString"]"
+                            asp-route-SearchString="@ViewData["SearchString"]"
                             asp-route-sortOrder="@(firstSort == "first_asc" ? "first_desc" : "first_asc")"
                             class="text-decoration-none d-flex align-items-center justify-content-between gap-2">
-                            @if(firstSort == "first_asc")
-                            {   
-                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-up-icon lucide-chevron-up"><path d="m18 15-6-6-6 6" /></svg>
-                            }
-                            else
-                            {
-                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down-icon lucide-chevron-down"><path d="m6 9 6 6 6-6" /></svg>
-                            }
                             <span>First Name</span>
                         </a>
                     </div>
@@ -84,17 +68,9 @@
                             asp-controller="Students" 
                             asp-action="Index"
                             asp-route-page="@Model.PageNumber"
-                           asp-route-searchString="@ViewData["SearchString"]"
+                           asp-route-SearchString="@ViewData["SearchString"]"
                             asp-route-sortOrder="@(dateSort == "date_latest" ? "date_oldest" : "date_latest")"
                            class="text-decoration-none d-flex align-items-center justify-content-between gap-2">
-                            @if (dateSort == "date_latest")
-                            {
-                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-up-icon lucide-chevron-up"><path d="m18 15-6-6-6 6" /></svg>
-                            }
-                            else
-                            {
-                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down-icon lucide-chevron-down"><path d="m6 9 6 6 6-6" /></svg>
-                            }
                             <span>Enrollment Date</span>
                         </a>
                     </div>
@@ -126,14 +102,14 @@
     </table>
 </div>
 
-<p>Page @(Model.PageNumber > 0 ? Model.PageNumber : 0) of @Model.TotalPages</p>
+<p>Page @Model.PageNumber of @Model.TotalPages</p>
 
 <div class="d-flex gap-2">
     <a 
         asp-controller="Students" 
         asp-action="Index"
         asp-route-sortOrder="@ViewData["SortOrder"]"
-        asp-route-searchString="@ViewData["SearchString"]"
+        asp-route-SearchString="@ViewData["SearchString"]"
         asp-route-page="@(Model.PageNumber - 1)"
        class="btn btn-default d-flex gap-2 align-items-center py-1 pe-3 ps-2 @(prevDisabled ? "disabled" : "")">
         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-left-icon lucide-chevron-left"><path d="m15 18-6-6 6-6" /></svg>
@@ -143,7 +119,7 @@
         asp-controller="Students"
         asp-action="Index"
         asp-route-sortOrder="@ViewData["SortOrder"]"
-        asp-route-searchString="@ViewData["SearchString"]"
+        asp-route-SearchString="@ViewData["SearchString"]"
         asp-route-page="@(Model.PageNumber + 1)"
         class="btn btn-default d-flex gap-2 align-items-center py-1 ps-3 pe-2 @(nextDisabled ? "disabled" : "")"
     >

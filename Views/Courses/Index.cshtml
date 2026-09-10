@@ -15,18 +15,28 @@
 </p>
 
 <form asp-action="Index" method="get">
-    <div class="form-group mb-3">
-        <label class="control-label">Select Department: </label>
-        <select 
-            name="SelectedDepartment" 
-            class="form-control d-inline-block w-auto ms-2"
-            asp-items="ViewBag.SelectedDepartment"
-        >
-            <option value="">All</option>
-        </select>
-        <input type="submit" value="Filter" class="btn btn-default ms-2" />
+    <div class="form-actions no-color">
+        <p>
+            <label class="control-label">Department: </label>
+            <select 
+                name="SelectedDepartment"
+                asp-items="ViewBag.SelectedDepartment"
+                class="d-inline-block w-auto"
+            >
+                <option value="">All</option>
+            </select>
+            <label>Find by title: <input type="text" name="SearchString" value="@ViewData["SearchString"]" /></label>
+            <input type="submit" value="Search" class="btn btn-default" /> |
+            <a asp-action="Index" class="btn btn-default">Back to Full List</a>
+        </p>
     </div>
 </form>
+
+@* <form asp-action="Index" method="get">
+    <div class="form-group mb-3">
+        
+    </div>
+</form> *@
 
 <table class="table">
     <thead>
@@ -56,12 +66,13 @@
     </tbody>
 </table>
 
-<p>Page @(Model.PageNumber > 0 ? Model.PageNumber : 0) of @Model.TotalPages</p>
+<p>Page @Model.PageNumber of @Model.TotalPages</p>
 
 <div class="d-flex gap-2">
     <a asp-controller="Courses"
        asp-action="Index"
        asp-route-page="@(Model.PageNumber - 1)"
+       asp-route-SearchString="@ViewData["SearchString"]"
        class="btn btn-default d-flex gap-2 align-items-center py-1 pe-3 ps-2 @(prevDisabled ? "disabled" : "")">
         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-left-icon lucide-chevron-left"><path d="m15 18-6-6 6-6" /></svg>
         Prev
@@ -69,6 +80,7 @@
     <a asp-controller="Courses"
        asp-action="Index"
        asp-route-page="@(Model.PageNumber + 1)"
+       asp-route-SearchString="@ViewData["SearchString"]"
        class="btn btn-default d-flex gap-2 align-items-center py-1 ps-3 pe-2 @(nextDisabled ? "disabled" : "")">
         Next
         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-right-icon lucide-chevron-right"><path d="m9 18 6-6-6-6" /></svg>

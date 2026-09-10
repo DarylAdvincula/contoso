@@ -15,15 +15,28 @@ public class DepartmentsController : Controller
         _context = context;
     }
 
-    public async Task<IActionResult> Index(int? page)
+    public async Task<IActionResult> Index(
+        int? page,
+        string? SearchString
+    )
     {
-        var departments = _context.Departments
-            .Include(d => d.Administrator)
+        ViewData["SearchString"] = SearchString;
+
+        IQueryable<Department> departmentsQuery = _context.Departments
+            .Include(d => d.Administrator);
+
+        if (!String.IsNullOrEmpty(SearchString))
+        {
+            departmentsQuery = departmentsQuery
+                .Where(d => d.Name.Contains(SearchString));
+        }
+
+        departmentsQuery = departmentsQuery
             .AsNoTracking();
 
         return View(
             await Page<Department>.CreateAsync(
-                query: departments,
+                query: departmentsQuery,
                 pageNumber: page ?? 1
             )
         );
