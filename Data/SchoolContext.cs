@@ -28,20 +28,41 @@ public class SchoolContext : DbContext
         modelBuilder.Entity<OfficeAssignment>().ToTable("OfficeAssignment");
         modelBuilder.Entity<CourseAssignment>().ToTable("CourseAssignment");
 
+        // set unique constraints
+        modelBuilder.Entity<Course>()
+            .HasIndex(c => c.Title)
+            .IsUnique();
+
+        modelBuilder.Entity<Enrollment>()
+            .HasIndex(e => new { e.StudentId, e.CourseId })
+            .IsUnique();
+
+        modelBuilder.Entity<Instructor>()
+            .HasIndex(i => new { i.FirstMidName, i.LastName })
+            .IsUnique();
+
+        modelBuilder.Entity<Department>()
+            .HasIndex(d => d.Name)
+            .IsUnique();
+        
+        // model inheritance
         modelBuilder.Entity<Person>()
             .ToTable("Person")
             .HasDiscriminator<string>("Discriminator")
             .HasValue<Instructor>("Instructor")
             .HasValue<Student>("Student");
 
+        // composite primary key for couse assignment (many course to many instructor)
         modelBuilder.Entity<CourseAssignment>()
             .HasKey(ca => new { ca.CourseId, ca.InstructorId });
 
+        // specify which is the foreign key that will point to the administrator
         modelBuilder.Entity<Department>()
             .HasOne(d => d.Administrator)
             .WithMany()
             .HasForeignKey(d => d.InstructorId);
 
+        // set RowVersion column as the concurrency key
         modelBuilder.Entity<Department>()
             .Property(p => p.RowVersion)
             .IsConcurrencyToken();
