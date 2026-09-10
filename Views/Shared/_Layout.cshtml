@@ -1,8 +1,9 @@
-﻿@functions{
+﻿@functions {
     public record Link(string controller, string action, string text);
 }
 
 @{
+    var activeController = ViewContext.RouteData.Values["controller"]?.ToString();
     var links = new Link[]
     {
         new(controller: "Home",        action: "Index", text: "Home"),
@@ -37,13 +38,17 @@
                     <ul class="navbar-nav flex-grow-1">
                         @foreach (var (controller, action, text) in links)
                         {
+                            // 1. Separate logic for the Home Controller (since it has both Index and About pages)
+                            bool isActive = controller == "Home"
+                            ? (activeController == "Home" && ViewContext.RouteData.Values["action"]?.ToString() == action)
+                            : (activeController == controller);
+
                             <li class="nav-item">
-                                <a 
-                                    class="nav-link text-dark" 
-                                    asp-area="" 
-                                    asp-controller="@controller" 
-                                    asp-action="@action"
-                                >
+                                <!-- 2. Swapped "text-dark" for "active" class dynamically -->
+                                <a class="nav-link @(isActive ? "active fw-bold" : "text-dark")"
+                                   asp-area=""
+                                   asp-controller="@controller"
+                                   asp-action="@action">
                                     @text
                                 </a>
                             </li>
@@ -61,7 +66,7 @@
 
     <footer class="border-top footer text-muted pt-4">
         <div class="container">
-            &copy; 2020 - Contoso University - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+            &copy; 2026 - Contoso University - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
         </div>
     </footer>
     <script src="~/lib/jquery/dist/jquery.js"></script>
