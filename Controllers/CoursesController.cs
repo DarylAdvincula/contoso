@@ -48,7 +48,10 @@ public class CoursesController : Controller
         if (!String.IsNullOrEmpty(SearchString))
         {
             coursesQuery = coursesQuery.
-                Where(c => c.Title.Contains(SearchString));
+                Where(c => 
+                    c.Title.Contains(SearchString) ||
+                    c.Id.ToString().Contains(SearchString)
+                );
         }
 
         return View(
