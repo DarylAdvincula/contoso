@@ -70,7 +70,7 @@
                     }
                 </td>
                 <td>
-                    <a asp-action="Index" asp-route-id="@item.Id" asp-route-page="@ViewBag.PageNumber">Select</a>
+                    <a asp-action="Index" asp-route-id="@item.Id" asp-route-page="@ViewBag.PageNumber" asp-route-SearchString="@ViewData["SearchString"]">Select</a>
                     <a asp-action="Edit" asp-route-id="@item.Id">Edit</a>
                     <a asp-action="Details" asp-route-id="@item.Id">Details</a>
                     <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
@@ -100,7 +100,13 @@
             }
             <tr class="@selectedRow">
                 <td>
-                    @Html.ActionLink("Select", "Index", new { id = ViewBag.Id, courseId = item.Id, page = ViewBag.PageNumber })
+                    @Html.ActionLink("Select", "Index", new 
+                    { 
+                        id = ViewBag.Id, 
+                        courseId = item.Id, 
+                        page = ViewBag.PageNumber, 
+                        SearchString = ViewData["SearchString"] 
+                    })
                 </td>
                 <td>
                     @item.Id

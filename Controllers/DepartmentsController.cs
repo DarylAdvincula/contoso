@@ -91,7 +91,7 @@ public class DepartmentsController : Controller
         }
         catch (DbUpdateException)
         {
-            errorMessage = "Unable to save changes. " +
+            errorMessage = "Unable to create. " +
                 "Try again, and if the problem persists, " +
                 "see your system administrator.";
         }

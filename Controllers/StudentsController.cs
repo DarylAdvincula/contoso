@@ -221,7 +221,7 @@ public class StudentsController : Controller
         {
             errorMessage = "An unknown error occurred. " +
                 "Try again, and if the problem persists, " +
-                "see your system administrator. " + ex.Message;
+                "see your system administrator. ";
         }
 
         ModelState.AddModelError("", errorMessage);

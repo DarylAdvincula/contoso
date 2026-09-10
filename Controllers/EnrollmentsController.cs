@@ -141,8 +141,6 @@ public class EnrollmentsController : Controller
         if (enrollment == null)
             return NotFound();
 
-        PopulateCoursesDropDownList(enrollment.CourseId);
-        PopulateStudentDropDownList(enrollment.StudentId);
         return View(enrollment);
     }
 
@@ -151,7 +149,7 @@ public class EnrollmentsController : Controller
     public async Task<IActionResult> Edit(
         int? id, 
         
-        [Bind("CourseId,StudentId,Grade")] 
+        [Bind("Grade")] 
         Enrollment enrollment
     )
     {
@@ -167,18 +165,12 @@ public class EnrollmentsController : Controller
             return NotFound();
 
         if (!ModelState.IsValid)
-        {
-            PopulateCoursesDropDownList(enrollment.CourseId);
-            PopulateStudentDropDownList(enrollment.StudentId);
             return View(enrollment);
-        }
 
         string errorMessage = string.Empty;
 
         try
         {
-            enrollmentToUpdate.StudentId = enrollment.StudentId;
-            enrollmentToUpdate.CourseId = enrollment.CourseId;
             enrollmentToUpdate.Grade = enrollment.Grade;
 
             await _context.SaveChangesAsync();
@@ -198,8 +190,6 @@ public class EnrollmentsController : Controller
         }
 
         ModelState.AddModelError("", errorMessage);
-        PopulateCoursesDropDownList(enrollment.CourseId);
-        PopulateStudentDropDownList(enrollment.StudentId);
         return View(enrollment);
     }
 
