@@ -76,8 +76,11 @@ public class InstructorsController : Controller
             ViewData["InstructorId"] = id;
 
             // access the instructor with the matching id
-            Instructor instructor = viewModel.Instructors
-                .Single(i => i.Id == id);
+            Instructor? instructor = viewModel.Instructors
+                .FirstOrDefault(i => i.Id == id);
+
+            if (instructor == null)
+                return NotFound();
 
             // get the instructor's taught courses
             viewModel.Courses = instructor.CourseAssignments
@@ -90,8 +93,11 @@ public class InstructorsController : Controller
         {
             ViewData["CourseId"] = courseId;
 
-            var selectedCourse = viewModel.Courses
-                .Single(c => c.Id == courseId);
+            Course? selectedCourse = viewModel.Courses
+                .FirstOrDefault(c => c.Id == courseId);
+
+            if (selectedCourse == null)
+                return NotFound();
 
             await _context
                 .Entry(selectedCourse)
