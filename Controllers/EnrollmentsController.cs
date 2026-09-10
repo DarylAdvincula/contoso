@@ -16,16 +16,50 @@ public class EnrollmentsController : Controller
     }
 
     // GET: ENROLLMENTS
-    public async Task<IActionResult> Index(int? page)
+    public async Task<IActionResult> Index(
+        int? page,
+        int? SelectedCourse,
+        string? SearchString
+    )
     {
-        var enrollments = _context.Enrollments
+        ViewData["SearchString"] = SearchString;
+
+        var courses = await _context.Courses
+            .OrderBy(q => q.Title)
+            .ToListAsync();
+
+        ViewBag.SelectedCourse = new SelectList(
+            courses,
+            "Id",
+            "Title",
+            SelectedCourse
+        );
+
+        var courseId = SelectedCourse.GetValueOrDefault();
+
+        IQueryable<Enrollment> enrollmentsQuery = _context.Enrollments
             .Include(e => e.Student)
             .Include(e => e.Course)
+            .Where(e => 
+                !SelectedCourse.HasValue || 
+                e.Course!.Id == courseId
+            );
+
+        if (!String.IsNullOrEmpty(SearchString))
+        {
+            enrollmentsQuery = enrollmentsQuery
+                .Where(e => 
+                    e.Student!.LastName.Contains(SearchString) ||
+                    e.Student!.FirstMidName.Contains(SearchString)
+                );
+        }
+
+        enrollmentsQuery = enrollmentsQuery
             .OrderBy(e => e.Student!.LastName);
 
         return View(
             await Page<Enrollment>.CreateAsync(
-                query: enrollments,
+                query: enrollmentsQuery,
                 pageNumber: page ?? 1
             )
         );

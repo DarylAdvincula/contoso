@@ -18,7 +18,7 @@ public class StudentsController : Controller
     [HttpGet]
     public async Task<IActionResult> Index(
         string? sortOrder,
-        string? searchString,
+        string? SearchString,
         int? page
     )
     {
@@ -52,27 +52,27 @@ public class StudentsController : Controller
 
         // store the final sort order and search string
         ViewData["SortOrder"] = sortOrder;
-        ViewData["SearchString"] = searchString;
+        ViewData["SearchString"] = SearchString;
 
         // build the initial query
         IQueryable<Student> studentsQuery = _context.Students;
 
-        if (!String.IsNullOrEmpty(searchString))
+        if (!String.IsNullOrEmpty(SearchString))
         {
             studentsQuery = studentsQuery.Where(s => 
-                s.LastName.Contains(searchString) ||
-                s.FirstMidName.Contains(searchString)
+                s.LastName.Contains(SearchString) ||
+                s.FirstMidName.Contains(SearchString)
             );
         }
 
         switch (sortOrder)
         {
             case "date_oldest":
-                studentsQuery = studentsQuery.OrderByDescending(s => s.EnrollmentDate);
+                studentsQuery = studentsQuery.OrderBy(s => s.EnrollmentDate);
                 break;
 
             case "date_latest":
-                studentsQuery = studentsQuery.OrderBy(s => s.EnrollmentDate);
+                studentsQuery = studentsQuery.OrderByDescending(s => s.EnrollmentDate);
                 break;
 
             case "first_desc":

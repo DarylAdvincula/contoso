@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using ContosoUniversity.Models;
 using ContosoUniversity.Data;
 using ContosoUniversity.Models.SchoolViewModels;
+using ContosoUniversity;
 
 public class InstructorsController : Controller
 {
@@ -14,13 +15,38 @@ public class InstructorsController : Controller
         _context = context;
     }
 
-    public async Task<IActionResult> Index(int? id, int? courseId, int? page)    
+    public async Task<IActionResult> Index(
+        int? id, 
+        int? courseId, 
+        int? page,
+        string? SearchString
+    )
     {
-        const int pageSize = 5;
+        ViewData["SearchString"] = SearchString;
+
+        var viewModel = new InstructorIndexData();
+
+        // store the instructors first
+        IQueryable<Instructor> instructorsQuery = _context.Instructors
+            .Include(i => i.OfficeAssignment)
+            .Include(i => i.CourseAssignments)
+                .ThenInclude(ca => ca.Course)
+                    .ThenInclude(c => c.Department);
+
+        if (!String.IsNullOrEmpty(SearchString))
+        {
+            instructorsQuery = instructorsQuery
+                .Where(i =>
+                    i.LastName.Contains(SearchString) || 
+                    i.FirstMidName.Contains(SearchString
+                )
+            );
+        }
+
         var pageNumber = page ?? 1;
         pageNumber = page < 1 ? 1 : pageNumber;
-        int totalItems = await _context.Instructors.CountAsync();
-        int totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
+        int totalItems = await instructorsQuery.CountAsync();
+        int totalPages = (int)Math.Ceiling(totalItems / (double)PageOptions.pageSizeMin);
 
         ViewBag.Id = id;
         ViewBag.CourseId = courseId;
@@ -29,17 +55,12 @@ public class InstructorsController : Controller
         ViewBag.HasPreviousPage = pageNumber > 1;
         ViewBag.HasNextPage = pageNumber < totalPages;
 
-        var viewModel = new InstructorIndexData();
-
-        // store the instructors first
-        viewModel.Instructors = await _context.Instructors
-            .Include(i => i.OfficeAssignment)
-            .Include(i => i.CourseAssignments)
-                .ThenInclude(ca => ca.Course)
-                    .ThenInclude(c => c.Department)
+        instructorsQuery = instructorsQuery
             .OrderBy(i => i.LastName)
-            .Skip((pageNumber - 1) * pageSize)
-            .Take(pageSize)
+            .Skip((pageNumber - 1) * PageOptions.pageSizeMin)
+            .Take(PageOptions.pageSizeMin);
+
+        viewModel.Instructors = await instructorsQuery
             .ToListAsync();
 
         if (
@@ -58,7 +79,7 @@ public class InstructorsController : Controller
             Instructor instructor = viewModel.Instructors
                 .Single(i => i.Id == id);
 
-            // get the instructor's course
+            // get the instructor's taught courses
             viewModel.Courses = instructor.CourseAssignments
                 .Select(ca => ca.Course);
         }

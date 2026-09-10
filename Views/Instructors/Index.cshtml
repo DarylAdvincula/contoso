@@ -12,6 +12,17 @@
 <p>
     <a asp-action="Create">Create New</a>
 </p>
+
+<form asp-action="Index" method="get">
+    <div class="form-actions no-color">
+        <p>
+            <label>Find by name: <input type="text" name="SearchString" value="@ViewData["SearchString"]" /></label>
+            <input type="submit" value="Search" class="btn btn-default" /> |
+            <a asp-action="Index" class="btn btn-default">Back to Full List</a>
+        </p>
+    </div>
+</form>
+
 <table class="table">
     <thead>
         <tr>
@@ -129,7 +140,7 @@
     </table>
 }
 
-<p>Page @(ViewBag.PageNumber > 0 ? ViewBag.PageNumber : 0) of @ViewBag.TotalPages</p>
+<p>Page @ViewBag.PageNumber of @ViewBag.TotalPages</p>
 
 <div class="d-flex gap-2">
     <a asp-controller="Instructors"
@@ -137,6 +148,7 @@
        asp-route-id=""
        asp-route-courseId=""
        asp-route-page="@(ViewBag.PageNumber - 1)"
+       asp-route-SearchString="@ViewData["SearchString"]"
        class="btn btn-default d-flex gap-2 align-items-center py-1 pe-3 ps-2 @(prevDisabled ? "disabled" : "")">
         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-left-icon lucide-chevron-left"><path d="m15 18-6-6 6-6" /></svg>
         Prev
@@ -146,6 +158,7 @@
        asp-route-id=""
        asp-route-courseId=""
        asp-route-page="@(ViewBag.PageNumber + 1)"
+       asp-route-SearchString="@ViewData["SearchString"]"
        class="btn btn-default d-flex gap-2 align-items-center py-1 ps-3 pe-2 @(nextDisabled ? "disabled" : "")">
         Next
         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-right-icon lucide-chevron-right"><path d="m9 18 6-6-6-6" /></svg>
